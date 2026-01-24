@@ -3,9 +3,10 @@
 import { useActionState } from 'react';
 import { authenticate } from './actions';
 import { Cinzel } from 'next/font/google';
-import { Truck, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { Hexagon, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Map from '@/components/Map';
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
 
@@ -17,25 +18,35 @@ export default function LoginPage() {
       <div className="absolute top-4 right-4 z-50">
         <ThemeToggle minimal={true} />
       </div>
-      {/* Background Image */}
-      <img
-        src="/images/login-bg.jpg"
-        alt="Mining fleet with dump trucks and excavators"
-        className="absolute inset-0 w-full h-full object-cover z-0"
-      />
+      {/* Background Map */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <Map 
+          center={[-3.316694, 114.590111]} 
+          zoom={16}
+          vehicles={[]}
+        />
+      </div>
       {/* Overlay */}
-      <div className="absolute inset-0 bg-white/30 dark:bg-slate-900/60 z-[1] backdrop-blur-[2px] transition-colors"></div>
+      <div className="absolute inset-0 bg-white/30 dark:bg-slate-900/60 z-[1] backdrop-blur-[2px] transition-colors pointer-events-none"></div>
+      {/* Dot Matrix Overlay */}
+      <div className="absolute inset-0 z-[2] pointer-events-none" style={{
+        backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px)',
+        backgroundSize: '4px 4px',
+        maskImage: 'linear-gradient(to bottom, black, transparent)',
+        WebkitMaskImage: 'linear-gradient(to bottom, black, transparent)'
+      }}></div>
 
       <div className="w-full max-w-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-slate-700 relative z-10 transition-colors">
         {/* Header */}
         <div className="bg-slate-900/95 p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20 z-0"></div>
           <div className="relative z-10">
-            <div className="mx-auto w-16 h-16 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-white mb-4 border border-white/20 shadow-lg">
-              <Truck size={32} />
+            <div className="mx-auto w-16 h-16 flex items-center justify-center mb-4 relative">
+               <div className="absolute inset-0 bg-cyan-500/50 blur-lg rounded-full"></div>
+               <Hexagon size={48} className="text-cyan-400 fill-cyan-400 relative z-10" />
             </div>
-            <h1 className={`text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-300 tracking-wider drop-shadow-sm ${cinzel.className}`}>
-              AiCrone
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-wider font-sans uppercase">
+              AICRONE
             </h1>
             <p className="text-blue-200/70 text-xs uppercase tracking-[0.3em] mt-2 font-light">
               Fleet Management System

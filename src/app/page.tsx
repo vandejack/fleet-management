@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <DashboardLayout>
       <div className="absolute top-4 right-4 z-[1000] grid grid-cols-1 gap-4 w-64 pointer-events-none">
-        <div className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-md p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
+        <div className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
           <div className="p-3 bg-blue-500/10 dark:bg-blue-500/20 rounded-full text-blue-600 dark:text-blue-400">
             <Truck size={24} />
           </div>
@@ -36,7 +36,7 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-md p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
+        <div className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
           <div className="p-3 bg-green-500/10 dark:bg-green-500/20 rounded-full text-green-600 dark:text-green-400">
             <Truck size={24} />
           </div>
@@ -46,7 +46,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-md p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
+        <div className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-4 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white transition-colors">
           <div className="p-3 bg-yellow-500/10 dark:bg-yellow-500/20 rounded-full text-yellow-600 dark:text-yellow-400">
             <Battery size={24} />
           </div>
