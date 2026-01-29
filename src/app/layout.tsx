@@ -20,12 +20,16 @@ export const metadata: Metadata = {
   description: "Advanced fleet management system",
 };
 
+import { getVehicles, getDrivers } from "@/lib/data";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const vehicles = await getVehicles();
+  const drivers = await getDrivers();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -33,7 +37,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <Providers session={session}>
+          <Providers session={session} initialVehicles={vehicles} initialDrivers={drivers}>
             {children}
           </Providers>
         </ThemeProvider>

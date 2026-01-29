@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Map, BarChart3, History, Settings, ChevronLeft, ChevronRight, User, Truck, LogOut, Wrench, Calendar, Hexagon } from 'lucide-react';
+import { Map, BarChart3, History, Settings, ChevronLeft, ChevronRight, User, Truck, LogOut, Wrench, Calendar, Hexagon, BookOpen, Building } from 'lucide-react';
 import Link from 'next/link';
 import { Cinzel } from 'next/font/google';
 import { useSession } from 'next-auth/react';
@@ -14,10 +14,9 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
   const { data: session } = useSession();
 
   return (
-    <div 
-      className={`h-screen w-64 bg-slate-900/40 backdrop-blur-lg text-white flex flex-col p-4 shadow-2xl z-[2000] fixed left-0 top-0 border-r border-white/10 transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}
+    <div
+      className={`h-screen w-64 bg-slate-900/40 backdrop-blur-lg text-white flex flex-col p-4 shadow-2xl z-[2000] fixed left-0 top-0 border-r border-white/10 transition-transform duration-300 ease-in-out print:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
     >
       <button
         onClick={onToggle}
@@ -29,9 +28,9 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
 
       <div className="mb-8 flex items-center justify-center gap-3">
         <div className="relative flex items-center justify-center w-10 h-10">
-           {/* Glow Effect */}
-           <div className="absolute inset-0 bg-cyan-500/50 blur-lg rounded-full"></div>
-           <Hexagon size={32} className="text-cyan-400 fill-cyan-400 relative z-10" />
+          {/* Glow Effect */}
+          <div className="absolute inset-0 bg-cyan-500/50 blur-lg rounded-full"></div>
+          <Hexagon size={32} className="text-cyan-400 fill-cyan-400 relative z-10" />
         </div>
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-wider font-sans">
           AICRONE
@@ -66,14 +65,21 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
           <Calendar size={20} />
           <span>Schedule</span>
         </Link>
-        
+
         <div className="mt-auto border-t border-white/10 pt-4 space-y-2">
           <ThemeToggle />
           <Link href="/settings" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg transition-colors">
             <Settings size={20} />
             <span>Settings</span>
           </Link>
-          
+
+          {(session?.user as any)?.role === 'superadmin' && (
+            <Link href="/companies" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg transition-colors text-cyan-400">
+              <Building size={20} />
+              <span>Companies</span>
+            </Link>
+          )}
+
           {session?.user && (
             <div className="bg-slate-800/50 rounded-lg p-3">
               <div className="flex items-center gap-3 mb-3">
@@ -85,8 +91,8 @@ export const Sidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
                   <p className="text-xs text-slate-400 truncate">{session.user.email}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => logout()} 
+              <button
+                onClick={() => logout()}
                 className="w-full flex items-center justify-center gap-2 p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-md transition-colors"
               >
                 <LogOut size={14} />

@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // @ts-expect-error - Next.js 16 types might not be updated yet
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;

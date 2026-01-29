@@ -62,9 +62,9 @@ interface FleetContextType {
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
-export const FleetProvider = ({ children }: { children: ReactNode }) => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+export const FleetProvider = ({ children, initialVehicles, initialDrivers }: { children: ReactNode, initialVehicles?: Vehicle[], initialDrivers?: Driver[] }) => {
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles || []);
+  const [drivers, setDrivers] = useState<Driver[]>(initialDrivers || []);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
   const [fuelTransactions, setFuelTransactions] = useState<FuelTransaction[]>([]);
@@ -72,45 +72,56 @@ export const FleetProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const lastAlertTimeRef = useRef<Record<string, number>>({});
 
-  // Initialize from localStorage
+  // Initialize from localStorage or Props
   useEffect(() => {
+    // If initial data is provided (from server), prioritize it over mock/default, but check localStorage for Demo persistence?
+    // For now, let's treat server data as truth if provided. 
+    // If not provided (undefined), fallback to existing logic.
+
+    // Actually, if initialVehicles is passed, we already set it in useState(initialVehicles).
+    // But we might want to check localStorage too.
+
     const savedVehicles = localStorage.getItem('fleet_vehicles');
     const savedDrivers = localStorage.getItem('fleet_drivers');
     const savedAlerts = localStorage.getItem('fleet_alerts');
     const savedSettings = localStorage.getItem('fleet_settings');
     const savedMaintenance = localStorage.getItem('fleet_maintenance');
 
-    if (savedVehicles) {
-      const parsedVehicles = JSON.parse(savedVehicles);
-      // Heuristic: If mock data has significantly more items than saved data, 
-      // assume it's a dev update and use mock data.
-      if (parsedVehicles.length < MOCK_VEHICLES.length) {
-        setVehicles(MOCK_VEHICLES);
-      } else {
+    if (initialVehicles === undefined) {
+      if (savedVehicles) {
+        const parsedVehicles = JSON.parse(savedVehicles);
         setVehicles(parsedVehicles);
       }
+      // If undefined and no local storage, maybe mock? Or empty?
+      // For safety in this hybrid app, we might default to mock if TRULY undefined (client-side only nav)
+      // BUT for our specific use case, we want to avoid mock for real users.
+      // Since layout always passes array (mock or db), this block is only for client-side usage without SSR.
+      else setVehicles(MOCK_VEHICLES);
+    } else {
+      // initialVehicles is provided ([], [data], etc). 
+      // We Use IT. Pure and simple.
+      // Optional: Merge with localStorage if we want "offline" support, but for "Real DB" mode, Server > Local.
+      setVehicles(initialVehicles);
     }
-    else setVehicles(MOCK_VEHICLES);
 
-    if (savedDrivers) {
-      const parsedDrivers = JSON.parse(savedDrivers);
-      if (parsedDrivers.length < MOCK_DRIVERS.length) {
-        setDrivers(MOCK_DRIVERS);
-      } else {
-        setDrivers(parsedDrivers);
+    if (initialDrivers === undefined) {
+      if (savedDrivers) {
+        setDrivers(JSON.parse(savedDrivers));
       }
+      else setDrivers(MOCK_DRIVERS);
+    } else {
+      setDrivers(initialDrivers);
     }
-    else setDrivers(MOCK_DRIVERS);
 
     if (savedAlerts) setAlerts(JSON.parse(savedAlerts));
-    
+
     if (savedSettings) setSettings(JSON.parse(savedSettings));
 
     if (savedMaintenance) setMaintenance(JSON.parse(savedMaintenance));
     else setMaintenance(MOCK_MAINTENANCE);
 
     setIsInitialized(true);
-  }, []);
+  }, [initialVehicles, initialDrivers]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -145,7 +156,7 @@ export const FleetProvider = ({ children }: { children: ReactNode }) => {
     const interval = setInterval(() => {
       setVehicles(prev => prev.map(v => {
         if (v.status !== 'moving') return v;
-        
+
         const latChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
         const lngChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
         const fuelConsumption = Math.random() * 0.1 * settings.simulation.speed;
@@ -173,7 +184,7 @@ export const FleetProvider = ({ children }: { children: ReactNode }) => {
       const now = Date.now();
       const lastTime = lastAlertTimeRef.current[v.id + '_speed'] || 0;
       const lastFuelTime = lastAlertTimeRef.current[v.id + '_fuel'] || 0;
-      
+
       // Speed Alert (Cooldown: 20s)
       if (v.speed > 90 && now - lastTime > 20000) {
         const newAlert: Alert = {
@@ -304,15 +315,15 @@ export const FleetProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <FleetContext.Provider value={{ 
-      vehicles, 
-      drivers, 
-      alerts, 
+    <FleetContext.Provider value={{
+      vehicles,
+      drivers,
+      alerts,
       settings,
       maintenance,
       fuelTransactions,
-      assignDriver, 
-      unassignDriver, 
+      assignDriver,
+      unassignDriver,
       dismissAlert,
       clearAllAlerts,
       updateSettings,

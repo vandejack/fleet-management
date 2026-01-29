@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = []
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  city      String?
+  country   String?
+  users     User[]
+  vehicles  Vehicle[]
+  drivers   Driver[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  image     String?
+  role      String   @default("user") // "superadmin", "admin", "user"
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Driver {
+  id            String    @id @default(cuid())
+  name          String
+  phone         String
+  photoUrl      String?
+  licenseNumber String
+  status        String    // 'active' | 'off_duty' | 'on_leave'
+  rating        Float
+  joinedDate    DateTime
+  totalTrips    Int       @default(0)
+  vehicles      Vehicle[]
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Vehicle {
+  id              String            @id @default(cuid())
+  name            String
+  plate           String            @unique
+  status          String            // 'moving' | 'idle' | 'stopped'
+  lat             Float
+  lng             Float
+  lastLocationTime DateTime         @default(now())
+  fuelLevel       Float             // percentage
+  speed           Float             // km/h
+  model           String?
+  year            Int?
+  fuelType        String?           // 'diesel' | 'petrol' | 'electric' | 'hybrid'
+  
+  driverId        String?
+  driver          Driver?           @relation(fields: [driverId], references: [id])
+  
+  fuelTransactions FuelTransaction[]
+  alerts          Alert[]
+  maintenance     MaintenanceRecord[]
+
+  companyId       String?
+  company         Company?          @relation(fields: [companyId], references: [id])
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model FuelTransaction {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  date      DateTime
+  amount    Float    // liters
+  cost      Float    // total cost
+  location  String
+  odometer  Float?
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  type      String   // 'warning' | 'critical' | 'info'
+  message   String
+  timestamp DateTime @default(now())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model MaintenanceRecord {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  type        String   // 'routine' | 'repair' | 'inspection'
+  status      String   // 'scheduled' | 'in_progress' | 'completed'
+  date        DateTime
+  cost        Float
+  description String
+  provider    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
