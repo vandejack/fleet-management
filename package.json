@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "prisma generate && prisma migrate deploy && npx tsx prisma/seed.ts && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && npx tsx prisma/seed.ts && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
@@ -42,8 +42,8 @@
     "eslint-config-next": "16.1.3",
     "prisma": "^6.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "tsx": "^4.7.1"
+    "tsx": "^4.21.0",
+    "typescript": "^5"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

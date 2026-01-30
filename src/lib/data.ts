@@ -10,6 +10,7 @@ function mapDbVehicleToInterface(dbVehicle: any): Vehicle {
         id: dbVehicle.id,
         name: dbVehicle.name,
         plate: dbVehicle.plate,
+        imei: dbVehicle.imei || undefined,
         status: dbVehicle.status as 'moving' | 'idle' | 'stopped',
         currentLocation: {
             lat: dbVehicle.lat,
@@ -77,6 +78,38 @@ export async function getDrivers(): Promise<Driver[]> {
         return dbDrivers.map(mapDbDriverToInterface);
     } catch (error) {
         console.error("Failed to fetch drivers from DB:", error);
+        return [];
+    }
+}
+
+export async function getMaintenance(): Promise<any[]> {
+    const session = await auth();
+    try {
+        const user = session?.user as any;
+        // Maintenance needs to be filtered by vehicles that belong to the company
+        // Or if maintenance table has companyId (it doesn't directly, but linked via vehicle)
+        // We can query maintenance where vehicle.companyId = user.companyId
+
+        const where = user?.role === 'superadmin' ? {} : {
+            vehicle: {
+                companyId: user?.companyId
+            }
+        };
+
+        const maintenance = await prisma.maintenanceRecord.findMany({
+            where,
+            orderBy: { date: 'desc' },
+            include: { vehicle: true } // metrics calculation might need vehicle info
+        });
+
+        // Map to interface if needed, or return as is (adjusting for date objects)
+        return maintenance.map(m => ({
+            ...m,
+            date: m.date.toISOString().split('T')[0], // Component expects string YYYY-MM-DD
+            // Ensure other fields match MaintenanceRecord interface
+        }));
+    } catch (error) {
+        console.error("Failed to fetch maintenance:", error);
         return [];
     }
 }

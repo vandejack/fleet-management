@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "Advanced fleet management system",
 };
 
-import { getVehicles, getDrivers } from "@/lib/data";
+import { getVehicles, getDrivers, getMaintenance } from "@/lib/data";
 
 export default async function RootLayout({
   children,
@@ -30,6 +30,7 @@ export default async function RootLayout({
   const session = await auth();
   const vehicles = await getVehicles();
   const drivers = await getDrivers();
+  const maintenance = await getMaintenance();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -37,7 +38,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <Providers session={session} initialVehicles={vehicles} initialDrivers={drivers}>
+          <Providers session={session} initialVehicles={vehicles} initialDrivers={drivers} initialMaintenance={maintenance}>
             {children}
           </Providers>
         </ThemeProvider>

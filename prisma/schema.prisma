@@ -59,6 +59,7 @@ model Vehicle {
   id              String            @id @default(cuid())
   name            String
   plate           String            @unique
+  imei            String?           @unique
   status          String            // 'moving' | 'idle' | 'stopped'
   lat             Float
   lng             Float

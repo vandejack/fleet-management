@@ -141,3 +141,133 @@ export async function deleteUser(id: string) {
         return { success: false, error: 'Failed to delete user' };
     }
 }
+
+// DRIVER ACTIONS
+export async function createDriver(data: any) {
+    const session = await auth();
+    const user = session?.user as any;
+    if (!user?.companyId && user?.role !== 'superadmin') throw new Error('Unauthorized');
+
+    try {
+        const driver = await prisma.driver.create({
+            data: {
+                ...data,
+                companyId: user.companyId || data.companyId, // Allow superadmin to specify, else use user's company
+                joinedDate: new Date(),
+                totalTrips: 0,
+                rating: 5.0
+            }
+        });
+        revalidatePath('/drivers');
+        return { success: true, driver };
+    } catch (error) {
+        console.error('Failed to create driver:', error);
+        return { success: false, error: 'Failed to create driver' };
+    }
+}
+
+export async function updateDriver(id: string, data: any) {
+    const session = await auth(); // Add stricter checks if needed
+    try {
+        const driver = await prisma.driver.update({
+            where: { id },
+            data
+        });
+        revalidatePath('/drivers');
+        return { success: true, driver };
+    } catch (error) {
+        return { success: false, error: 'Failed to update driver' };
+    }
+}
+
+export async function deleteDriver(id: string) {
+    const session = await auth();
+    try {
+        await prisma.driver.delete({ where: { id } });
+        revalidatePath('/drivers');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: 'Failed to delete driver' };
+    }
+}
+
+// VEHICLE ACTIONS
+export async function createVehicle(data: any) {
+    const session = await auth();
+    const user = session?.user as any;
+    if (!user?.companyId && user?.role !== 'superadmin') throw new Error('Unauthorized');
+
+    try {
+        const vehicle = await prisma.vehicle.create({
+            data: {
+                ...data,
+                companyId: user.companyId || data.companyId,
+                status: 'idle',
+                speed: 0,
+                lastLocationTime: new Date(),
+                lat: -6.2, // Default to Jakarta if no loc
+                lng: 106.8
+            }
+        });
+        revalidatePath('/vehicles');
+        return { success: true, vehicle };
+    } catch (error) {
+        console.error('Failed to create vehicle:', error);
+        return { success: false, error: 'Failed to create vehicle' };
+    }
+}
+
+export async function updateVehicle(id: string, data: any) {
+    const session = await auth();
+    try {
+        const vehicle = await prisma.vehicle.update({
+            where: { id },
+            data
+        });
+        revalidatePath('/vehicles');
+        return { success: true, vehicle };
+    } catch (error) {
+        return { success: false, error: 'Failed to update vehicle' };
+    }
+}
+
+// MAINTENANCE ACTIONS
+export async function createMaintenance(data: any) {
+    const session = await auth();
+    try {
+        const maintenance = await prisma.maintenanceRecord.create({
+            data: {
+                vehicleId: data.vehicleId,
+                // userId: user.id? Only if we track who created it
+                type: data.type,
+                status: data.status,
+                date: new Date(data.date),
+                cost: data.cost,
+                description: data.description,
+                provider: data.provider
+            }
+        });
+        revalidatePath('/maintenance');
+        return { success: true, maintenance };
+    } catch (error) {
+        console.error('Failed to create maintenance:', error);
+        return { success: false, error: 'Failed to create maintenance' };
+    }
+}
+
+export async function updateMaintenance(id: string, data: any) {
+    const session = await auth();
+    try {
+        const maintenance = await prisma.maintenanceRecord.update({
+            where: { id },
+            data: {
+                ...data,
+                date: data.date ? new Date(data.date) : undefined
+            }
+        });
+        revalidatePath('/maintenance');
+        return { success: true, maintenance };
+    } catch (error) {
+        return { success: false, error: 'Failed to update maintenance' };
+    }
+}

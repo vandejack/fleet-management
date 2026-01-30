@@ -8,13 +8,14 @@ export default function VehiclesPage() {
   const { vehicles, addVehicle, updateVehicle, maintenance } = useFleet();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  
+
   // Add/Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<any>(null);
   const [vehicleFormData, setVehicleFormData] = useState({
     name: '',
     plate: '',
+    imei: '',
     model: '',
     year: new Date().getFullYear(),
     fuelType: 'diesel' as 'diesel' | 'petrol' | 'electric' | 'hybrid',
@@ -25,6 +26,7 @@ export default function VehiclesPage() {
     setVehicleFormData({
       name: '',
       plate: '',
+      imei: '',
       model: '',
       year: new Date().getFullYear(),
       fuelType: 'diesel',
@@ -37,6 +39,7 @@ export default function VehiclesPage() {
     setVehicleFormData({
       name: vehicle.name,
       plate: vehicle.plate,
+      imei: vehicle.imei || '',
       model: vehicle.model || '',
       year: vehicle.year || new Date().getFullYear(),
       fuelType: vehicle.fuelType || 'diesel',
@@ -55,8 +58,8 @@ export default function VehiclesPage() {
   };
 
   const filteredVehicles = vehicles.filter(vehicle => {
-    const matchesSearch = vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || vehicle.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -84,7 +87,7 @@ export default function VehiclesPage() {
             <h1 className="text-3xl font-bold text-slate-900">Vehicle Management</h1>
             <p className="text-slate-500 mt-1">Monitor and manage your fleet vehicles</p>
           </div>
-          <button 
+          <button
             onClick={openAddModal}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
           >
@@ -151,9 +154,9 @@ export default function VehiclesPage() {
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search by vehicle name or plate..." 
+            <input
+              type="text"
+              placeholder="Search by vehicle name or plate..."
               className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -162,7 +165,7 @@ export default function VehiclesPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
               <Filter size={18} className="text-slate-500 dark:text-slate-400" />
-              <select 
+              <select
                 className="bg-transparent border-none text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -188,7 +191,7 @@ export default function VehiclesPage() {
                       <p className="text-sm text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded inline-block">
                         {vehicle.plate}
                       </p>
-                      <button 
+                      <button
                         onClick={() => openEditModal(vehicle)}
                         className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
                         title="Edit Vehicle"
@@ -230,11 +233,10 @@ export default function VehiclesPage() {
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-500 ${
-                          vehicle.fuelLevel > 70 ? 'bg-green-500' : 
-                          vehicle.fuelLevel > 30 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
+                      <div
+                        className={`h-2 rounded-full transition-all duration-500 ${vehicle.fuelLevel > 70 ? 'bg-green-500' :
+                            vehicle.fuelLevel > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
                         style={{ width: `${vehicle.fuelLevel}%` }}
                       ></div>
                     </div>
@@ -272,7 +274,7 @@ export default function VehiclesPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
                   View Details
@@ -284,7 +286,7 @@ export default function VehiclesPage() {
             </div>
           ))}
         </div>
-        
+
         {filteredVehicles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <Truck size={48} className="mb-4 opacity-20" />
@@ -305,7 +307,7 @@ export default function VehiclesPage() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleVehicleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Vehicle Name</label>
@@ -315,10 +317,21 @@ export default function VehiclesPage() {
                   className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Truck A-01"
                   value={vehicleFormData.name}
-                  onChange={e => setVehicleFormData({...vehicleFormData, name: e.target.value})}
+                  onChange={e => setVehicleFormData({ ...vehicleFormData, name: e.target.value })}
                 />
               </div>
-              
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">IMEI (GPS Device)</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 123456789012345"
+                  value={vehicleFormData.imei}
+                  onChange={e => setVehicleFormData({ ...vehicleFormData, imei: e.target.value })}
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">License Plate</label>
                 <input
@@ -327,7 +340,7 @@ export default function VehiclesPage() {
                   className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. B 1234 CD"
                   value={vehicleFormData.plate}
-                  onChange={e => setVehicleFormData({...vehicleFormData, plate: e.target.value})}
+                  onChange={e => setVehicleFormData({ ...vehicleFormData, plate: e.target.value })}
                 />
               </div>
 
@@ -340,7 +353,7 @@ export default function VehiclesPage() {
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g. Hino 500"
                     value={vehicleFormData.model}
-                    onChange={e => setVehicleFormData({...vehicleFormData, model: e.target.value})}
+                    onChange={e => setVehicleFormData({ ...vehicleFormData, model: e.target.value })}
                   />
                 </div>
                 <div>
@@ -350,7 +363,7 @@ export default function VehiclesPage() {
                     type="number"
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={vehicleFormData.year}
-                    onChange={e => setVehicleFormData({...vehicleFormData, year: parseInt(e.target.value)})}
+                    onChange={e => setVehicleFormData({ ...vehicleFormData, year: parseInt(e.target.value) })}
                   />
                 </div>
               </div>
@@ -360,7 +373,7 @@ export default function VehiclesPage() {
                 <select
                   className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={vehicleFormData.fuelType}
-                  onChange={e => setVehicleFormData({...vehicleFormData, fuelType: e.target.value as any})}
+                  onChange={e => setVehicleFormData({ ...vehicleFormData, fuelType: e.target.value as any })}
                 >
                   <option value="diesel">Diesel</option>
                   <option value="petrol">Petrol</option>

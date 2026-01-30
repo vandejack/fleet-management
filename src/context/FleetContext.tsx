@@ -21,6 +21,13 @@ interface Settings {
   };
 }
 
+// Server Actions
+import {
+  createDriver as createDriverAction, updateDriver as updateDriverAction, deleteDriver as deleteDriverAction,
+  createVehicle as createVehicleAction, updateVehicle as updateVehicleAction,
+  createMaintenance as createMaintenanceAction, updateMaintenance as updateMaintenanceAction
+} from '@/lib/actions';
+
 const DEFAULT_SETTINGS: Settings = {
   notifications: {
     email: true,
@@ -62,11 +69,11 @@ interface FleetContextType {
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
-export const FleetProvider = ({ children, initialVehicles, initialDrivers }: { children: ReactNode, initialVehicles?: Vehicle[], initialDrivers?: Driver[] }) => {
+export const FleetProvider = ({ children, initialVehicles, initialDrivers, initialMaintenance }: { children: ReactNode, initialVehicles?: Vehicle[], initialDrivers?: Driver[], initialMaintenance?: MaintenanceRecord[] }) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles || []);
   const [drivers, setDrivers] = useState<Driver[]>(initialDrivers || []);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
+  const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>(initialMaintenance || []);
   const [fuelTransactions, setFuelTransactions] = useState<FuelTransaction[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -117,11 +124,15 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers }: { c
 
     if (savedSettings) setSettings(JSON.parse(savedSettings));
 
-    if (savedMaintenance) setMaintenance(JSON.parse(savedMaintenance));
-    else setMaintenance(MOCK_MAINTENANCE);
+    if (initialMaintenance === undefined) {
+      if (savedMaintenance) setMaintenance(JSON.parse(savedMaintenance));
+      else setMaintenance(MOCK_MAINTENANCE);
+    } else {
+      setMaintenance(initialMaintenance);
+    }
 
     setIsInitialized(true);
-  }, [initialVehicles, initialDrivers]);
+  }, [initialVehicles, initialDrivers, initialMaintenance]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -258,51 +269,75 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers }: { c
     setSettings(newSettings);
   };
 
-  const addVehicle = (vehicleData: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => {
-    const newVehicle: Vehicle = {
-      ...vehicleData,
-      id: Math.random().toString(36).substr(2, 9),
-      currentLocation: {
-        lat: -6.200000 + (Math.random() - 0.5) * 0.1, // Random location around Jakarta
-        lng: 106.816666 + (Math.random() - 0.5) * 0.1,
-        timestamp: new Date().toISOString()
-      },
-      speed: 0,
-      status: 'idle',
-      fuelLevel: 100,
-      lastMaintenance: new Date().toISOString().split('T')[0]
-    };
-    setVehicles(prev => [...prev, newVehicle]);
+  const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => {
+    // 1. Optimistic Update or Wait for Server?
+    // Let's call server first for reliability in this version
+    const result = await createVehicleAction(vehicleData);
+    if (result.success && result.vehicle) {
+      // Map DB result to UI model if needed (dates are usually strings in JSON response but check types)
+      // result.vehicle from actions return Prisma object. 
+      // We need to map it to our Vehicle interface.
+      // For simplicity, we can assume the result matches mostly or we map manually.
+      // Ideally we reuse the mapper from data.ts but that's server side.
+      // Let's just push the local data + id for now, or reload page.
+
+      // Better: Refresh page to get canonical data? 
+      // Or just append consistent with UI type
+      const newVehicle: Vehicle = {
+        ...vehicleData,
+        id: result.vehicle.id,
+        currentLocation: {
+          lat: -6.2, lng: 106.8, timestamp: new Date().toISOString()
+        },
+        speed: 0,
+        status: 'idle',
+        fuelLevel: 100
+      };
+      setVehicles(prev => [newVehicle, ...prev]);
+    } else {
+      alert('Failed to create vehicle: ' + result.error);
+    }
   };
 
-  const updateVehicle = (id: string, data: Partial<Vehicle>) => {
-    setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+  const updateVehicle = async (id: string, data: Partial<Vehicle>) => {
+    const result = await updateVehicleAction(id, data);
+    if (result.success) {
+      setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+    }
   };
 
-  const addDriver = (driverData: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => {
-    const newDriver: Driver = {
-      ...driverData,
-      id: Math.random().toString(36).substr(2, 9),
-      joinedDate: new Date().toISOString().split('T')[0],
-      totalTrips: 0,
-      rating: 5.0
-    };
-    setDrivers(prev => [...prev, newDriver]);
+  const addDriver = async (driverData: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => {
+    const result = await createDriverAction(driverData);
+    if (result.success && result.driver) {
+      const newDriver: Driver = {
+        ...driverData,
+        id: result.driver.id,
+        joinedDate: new Date().toISOString().split('T')[0],
+        totalTrips: 0,
+        rating: 5.0
+      };
+      setDrivers(prev => [...prev, newDriver]);
+    }
   };
 
-  const updateDriver = (id: string, data: Partial<Driver>) => {
+  const updateDriver = async (id: string, data: Partial<Driver>) => {
+    await updateDriverAction(id, data);
     setDrivers(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
   };
 
-  const addMaintenance = (record: Omit<MaintenanceRecord, 'id'>) => {
-    const newRecord: MaintenanceRecord = {
-      ...record,
-      id: Math.random().toString(36).substr(2, 9)
-    };
-    setMaintenance(prev => [...prev, newRecord]);
+  const addMaintenance = async (record: Omit<MaintenanceRecord, 'id'>) => {
+    const result = await createMaintenanceAction(record);
+    if (result.success && result.maintenance) {
+      const newRecord: MaintenanceRecord = {
+        ...record,
+        id: result.maintenance.id
+      };
+      setMaintenance(prev => [...prev, newRecord]);
+    }
   };
 
-  const updateMaintenance = (id: string, data: Partial<MaintenanceRecord>) => {
+  const updateMaintenance = async (id: string, data: Partial<MaintenanceRecord>) => {
+    await updateMaintenanceAction(id, data);
     setMaintenance(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
   };
 

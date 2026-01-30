@@ -20,6 +20,7 @@ export interface Vehicle {
   id: string;
   name: string;
   plate: string;
+  imei?: string;
   status: 'moving' | 'idle' | 'stopped';
   currentLocation: Coordinate;
   fuelLevel: number; // percentage
@@ -438,19 +439,19 @@ export const MOCK_VEHICLES: Vehicle[] = [
 export const generateRoute = (start: Coordinate, count: number): Coordinate[] => {
   const route: Coordinate[] = [];
   let { lat, lng } = start;
-  
+
   for (let i = 0; i < count; i++) {
     // Simulate movement
     lat += (Math.random() - 0.5) * 0.01;
     lng += (Math.random() - 0.5) * 0.01;
-    
+
     route.push({
       lat,
       lng,
       timestamp: new Date(Date.now() - (count - i) * 60000).toISOString()
     });
   }
-  
+
   return route;
 };
 
