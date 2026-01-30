@@ -25,7 +25,9 @@ interface Settings {
 import {
   createDriver as createDriverAction, updateDriver as updateDriverAction, deleteDriver as deleteDriverAction,
   createVehicle as createVehicleAction, updateVehicle as updateVehicleAction,
-  createMaintenance as createMaintenanceAction, updateMaintenance as updateMaintenanceAction
+  createMaintenance as createMaintenanceAction, updateMaintenance as updateMaintenanceAction,
+  getVehicles as getVehiclesAction,
+  assignDriver as assignDriverAction, unassignDriver as unassignDriverAction
 } from '@/lib/actions';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -35,7 +37,7 @@ const DEFAULT_SETTINGS: Settings = {
     sms: true
   },
   simulation: {
-    autoPlay: true,
+    autoPlay: false,
     speed: 1,
     updateInterval: 2000
   },
@@ -103,7 +105,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       // For safety in this hybrid app, we might default to mock if TRULY undefined (client-side only nav)
       // BUT for our specific use case, we want to avoid mock for real users.
       // Since layout always passes array (mock or db), this block is only for client-side usage without SSR.
-      else setVehicles(MOCK_VEHICLES);
+      else setVehicles([]);
     } else {
       // initialVehicles is provided ([], [data], etc). 
       // We Use IT. Pure and simple.
@@ -115,7 +117,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       if (savedDrivers) {
         setDrivers(JSON.parse(savedDrivers));
       }
-      else setDrivers(MOCK_DRIVERS);
+      else setDrivers([]);
     } else {
       setDrivers(initialDrivers);
     }
@@ -126,13 +128,43 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
     if (initialMaintenance === undefined) {
       if (savedMaintenance) setMaintenance(JSON.parse(savedMaintenance));
-      else setMaintenance(MOCK_MAINTENANCE);
+      else setMaintenance([]);
     } else {
       setMaintenance(initialMaintenance);
     }
 
     setIsInitialized(true);
   }, [initialVehicles, initialDrivers, initialMaintenance]);
+
+  // LIVE TRACKING POLLING
+  useEffect(() => {
+    // Poll for vehicle updates every 3 seconds
+    const interval = setInterval(async () => {
+      try {
+        const result = await getVehiclesAction();
+        if (result.success && result.vehicles) {
+          setVehicles(prev => {
+            // Map server vehicles to UI format
+            return result.vehicles.map((v: any) => ({
+              ...v,
+              currentLocation: {
+                lat: v.lat,
+                lng: v.lng,
+                timestamp: v.lastLocationTime ? new Date(v.lastLocationTime).toISOString() : new Date().toISOString()
+              },
+              fuelLevel: v.fuelLevel || 0,
+              speed: v.speed || 0,
+              status: v.status || 'idle'
+            }));
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Persist to localStorage
   useEffect(() => {
@@ -224,37 +256,37 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     });
   }, [vehicles]);
 
-  const assignDriver = (driverId: string, vehicleId: string) => {
-    const driver = drivers.find(d => d.id === driverId);
-    if (!driver) return;
+  const assignDriver = async (driverId: string, vehicleId: string) => {
+    const result = await assignDriverAction(vehicleId, driverId);
+    if (result.success && result.vehicle) {
+      // Optimistically update or rely on polling. 
+      // Let's rely on polling for full consistency or update local state immediately.
+      // Update local state:
+      const driver = drivers.find(d => d.id === driverId);
 
-    // 1. Remove driver from any other vehicle
-    const updatedVehicles = vehicles.map(v => {
-      if (v.driver?.id === driverId) {
-        return { ...v, driver: undefined };
-      }
-      return v;
-    });
-
-    // 2. Assign to new vehicle
-    setVehicles(updatedVehicles.map(v => {
-      if (v.id === vehicleId) {
-        return { ...v, driver };
-      }
-      return v;
-    }));
-
-    // 3. Update driver status (optional, if we want to track 'assigned' status on driver object)
-    // For now, vehicle.driver is the source of truth for assignment.
+      setVehicles(prev => {
+        // Unassign from others
+        const cleaned = prev.map(v => v.driver?.id === driverId ? { ...v, driver: undefined } : v);
+        // Assign to target
+        return cleaned.map(v => v.id === vehicleId ? { ...v, driver: driver } : v);
+      });
+    }
   };
 
-  const unassignDriver = (driverId: string) => {
-    setVehicles(prev => prev.map(v => {
-      if (v.driver?.id === driverId) {
-        return { ...v, driver: undefined };
+  const unassignDriver = async (vehicleId: string) => {
+    // Note: Original signature was (driverId), but usually we unassign from a vehicle.
+    // Or if we unassign a driver, we find their vehicle.
+    // Let's support both or check how it's used.
+    // The context signature said `unassignDriver: (driverId: string) => void;`
+    // I should adhere to that or find the vehicle for that driver.
+
+    const vehicle = vehicles.find(v => v.driver?.id === vehicleId); // vehicleId here is actually driverId argument
+    if (vehicle) {
+      const result = await unassignDriverAction(vehicle.id);
+      if (result.success) {
+        setVehicles(prev => prev.map(v => v.id === vehicle.id ? { ...v, driver: undefined } : v));
       }
-      return v;
-    }));
+    }
   };
 
   const dismissAlert = (id: string) => {

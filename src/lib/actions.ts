@@ -206,7 +206,8 @@ export async function createVehicle(data: any) {
                 speed: 0,
                 lastLocationTime: new Date(),
                 lat: -6.2, // Default to Jakarta if no loc
-                lng: 106.8
+                lng: 106.8,
+                fuelLevel: 100 // Default fuel level
             }
         });
         revalidatePath('/vehicles');
@@ -269,5 +270,58 @@ export async function updateMaintenance(id: string, data: any) {
         return { success: true, maintenance };
     } catch (error) {
         return { success: false, error: 'Failed to update maintenance' };
+    }
+}
+
+export async function getVehicles() {
+    try {
+        const vehicles = await prisma.vehicle.findMany({
+            include: {
+                driver: true
+            },
+            orderBy: { updatedAt: 'desc' }
+        });
+        return { success: true, vehicles };
+    } catch (error) {
+        console.error('Failed to fetch vehicles:', error);
+        return { success: false, error: 'Failed to fetch vehicles' };
+    }
+}
+
+
+export async function assignDriver(vehicleId: string, driverId: string) {
+    const session = await auth();
+    try {
+        // 1. Unassign driver from any other vehicle (ensure 1-1 active assignment)
+        await prisma.vehicle.updateMany({
+            where: { driverId },
+            data: { driverId: null }
+        });
+
+        // 2. Assign to new vehicle
+        const vehicle = await prisma.vehicle.update({
+            where: { id: vehicleId },
+            data: { driverId }
+        });
+
+        revalidatePath('/vehicles');
+        return { success: true, vehicle };
+    } catch (error) {
+        console.error('Failed to assign driver:', error);
+        return { success: false, error: 'Failed to assign driver' };
+    }
+}
+
+export async function unassignDriver(vehicleId: string) {
+    const session = await auth();
+    try {
+        const vehicle = await prisma.vehicle.update({
+            where: { id: vehicleId },
+            data: { driverId: null }
+        });
+        revalidatePath('/vehicles');
+        return { success: true, vehicle };
+    } catch (error) {
+        return { success: false, error: 'Failed to unassign driver' };
     }
 }

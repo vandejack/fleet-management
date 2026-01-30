@@ -10,13 +10,7 @@ import prisma from '@/lib/prisma'; // Import prisma
 // but mention it should be hashed in production.
 
 // Mock user for demonstration
-const MOCK_USER = {
-  id: '1',
-  name: 'Demo User',
-  email: 'demo@aicrone.com',
-  password: 'demo1234',
-  image: 'https://ui-avatars.com/api/?name=Demo+User&background=0D8ABC&color=fff',
-};
+
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
@@ -37,15 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
 
-          // Check for Demo User
-          if (email === MOCK_USER.email && password === MOCK_USER.password) {
-            return {
-              id: MOCK_USER.id,
-              name: MOCK_USER.name,
-              email: MOCK_USER.email,
-              image: MOCK_USER.image,
-            };
-          }
+
 
           // Check DB for other users
           const user = await prisma.user.findUnique({ where: { email } });
