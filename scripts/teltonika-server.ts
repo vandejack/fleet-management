@@ -1,6 +1,6 @@
 
 import net from 'net';
-
+c
 const PORT = process.env.PORT || 7001;
 
 // Helper to parse Teltonika IO Elements
@@ -116,11 +116,10 @@ const server = net.createServer((socket) => {
         }
 
         // 3. Acknowledge Data
-        // Must send back the number of records received (4 bytes)
         const response = Buffer.alloc(4);
         response.writeUInt32BE(recordCount, 0);
         socket.write(response);
-    });
+    }
 
     socket.on('end', () => {
         console.log('Client disconnected');
