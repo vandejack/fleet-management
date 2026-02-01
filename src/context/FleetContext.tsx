@@ -98,8 +98,10 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
     if (initialVehicles === undefined) {
       if (savedVehicles) {
-        const parsedVehicles = JSON.parse(savedVehicles);
-        setVehicles(parsedVehicles);
+        try {
+          const parsedVehicles = JSON.parse(savedVehicles);
+          setVehicles(parsedVehicles);
+        } catch (e) { console.error("Failed to parse savedVehicles", e); }
       }
       // If undefined and no local storage, maybe mock? Or empty?
       // For safety in this hybrid app, we might default to mock if TRULY undefined (client-side only nav)
@@ -115,19 +117,33 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
     if (initialDrivers === undefined) {
       if (savedDrivers) {
-        setDrivers(JSON.parse(savedDrivers));
+        try {
+          setDrivers(JSON.parse(savedDrivers));
+        } catch (e) { console.error("Failed to parse savedDrivers", e); }
       }
       else setDrivers([]);
     } else {
       setDrivers(initialDrivers);
     }
 
-    if (savedAlerts) setAlerts(JSON.parse(savedAlerts));
+    if (savedAlerts) {
+      try {
+        setAlerts(JSON.parse(savedAlerts));
+      } catch (e) { console.error("Failed to parse savedAlerts", e); }
+    }
 
-    if (savedSettings) setSettings(JSON.parse(savedSettings));
+    if (savedSettings) {
+      try {
+        setSettings(JSON.parse(savedSettings));
+      } catch (e) { console.error("Failed to parse savedSettings", e); }
+    }
 
     if (initialMaintenance === undefined) {
-      if (savedMaintenance) setMaintenance(JSON.parse(savedMaintenance));
+      if (savedMaintenance) {
+        try {
+          setMaintenance(JSON.parse(savedMaintenance));
+        } catch (e) { console.error("Failed to parse savedMaintenance", e); }
+      }
       else setMaintenance([]);
     } else {
       setMaintenance(initialMaintenance);
