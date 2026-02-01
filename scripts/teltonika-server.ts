@@ -1,5 +1,6 @@
 
-import * as net from 'net';
+
+const net = require('net');
 
 const PORT = process.env.PORT || 7001;
 
