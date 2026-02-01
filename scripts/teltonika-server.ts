@@ -1,5 +1,5 @@
 
-import net from 'net';
+import * as net from 'net';
 
 const PORT = process.env.PORT || 7001;
 
