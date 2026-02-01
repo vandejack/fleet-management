@@ -3,7 +3,7 @@
     "appName": "FleetManager",
     "webDir": "public",
     "server": {
-        "url": "http://10.0.2.2:3000",
+        "url": "https://fms.aicrone.id",
         "cleartext": true
     }
 }
