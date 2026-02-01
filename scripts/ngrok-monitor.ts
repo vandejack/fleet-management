@@ -1,6 +1,6 @@
 
 import 'dotenv/config';
-import fetch from 'node-fetch';
+// Native fetch is available in Node 18+
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -12,7 +12,7 @@ async function getNgrokTunnels() {
         if (!response.ok) {
             throw new Error(`Ngrok API error: ${response.statusText}`);
         }
-        const data = await response.json();
+        const data: any = await response.json();
         return data.tunnels;
     } catch (error) {
         console.error('Error fetching ngrok tunnels:', error);
@@ -37,11 +37,11 @@ async function sendTelegramMessage(message: string) {
                 parse_mode: 'Markdown'
             })
         });
-        const data = await response.json();
+        const data: any = await response.json();
         if (!data.ok) {
             console.error('Telegram API error:', data);
         } else {
-            console.log('Telegram notification sent.');
+            console.log(`Telegram notification sent to ${TELEGRAM_CHAT_ID}`);
         }
     } catch (error) {
         console.error('Failed to send Telegram message:', error);
@@ -52,7 +52,7 @@ async function checkAndNotify() {
     console.log('Checking Ngrok status...');
     const tunnels = await getNgrokTunnels();
 
-    if (tunnels.length > 0) {
+    if (tunnels && tunnels.length > 0) {
         let message = '*Ngrok Session Active*\n\n';
         tunnels.forEach((t: any) => {
             message += `• *${t.name}*: ${t.public_url} -> ${t.config.addr}\n`;
@@ -65,8 +65,9 @@ async function checkAndNotify() {
     }
 }
 
-// Run check
+// Initial Run
 checkAndNotify();
 
-// Optional: Poll every X minutes
-// setInterval(checkAndNotify, 60 * 60 * 1000); // Every hour
+// Poll every 1 hour (3600000 ms)
+console.log('Starting hourly Ngrok monitor...');
+setInterval(checkAndNotify, 3600000);

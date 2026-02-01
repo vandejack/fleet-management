@@ -325,3 +325,37 @@ export async function unassignDriver(vehicleId: string) {
         return { success: false, error: 'Failed to unassign driver' };
     }
 }
+
+export async function getVehicleHistory(vehicleId: string, start?: string, end?: string) {
+    try {
+        const startDate = start ? new Date(start) : new Date(Date.now() - 24 * 60 * 60 * 1000); // Default 24h
+        const endDate = end ? new Date(end) : new Date();
+
+        const history = await prisma.locationHistory.findMany({
+            where: {
+                vehicleId,
+                timestamp: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            },
+            orderBy: { timestamp: 'asc' }
+        });
+
+        // Map to format expected by UI (lat, lng, timestamp string)
+        // Also handling Prisma weirdness if generated types are old, but TS check passed with any?
+        // Let's assume types are OK or rely on JS flexibility.
+        const route = history.map(h => ({
+            lat: h.lat,
+            lng: h.lng,
+            timestamp: h.timestamp.toISOString(),
+            speed: h.speed
+        }));
+
+        return { success: true, route };
+    } catch (error) {
+        console.error('Failed to fetch history:', error);
+        return { success: false, error: 'Failed to fetch history', route: [] };
+    }
+}
+

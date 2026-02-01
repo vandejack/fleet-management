@@ -1,5 +1,4 @@
-'use client';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Vehicle, Coordinate } from '@/utils/mockData';
 import L from 'leaflet';
@@ -9,12 +8,12 @@ import { useTheme } from 'next-themes';
 // Custom vehicle icon
 const getVehicleIcon = (status: string) => {
   // Colors matching the user provided image (Blue, White, Red)
-  const colors = status === 'moving' 
+  const colors = status === 'moving'
     ? { base: '#3b82f6', dark: '#1e3a8a', light: '#60a5fa' } // Blue (Moving)
-    : status === 'idle' 
+    : status === 'idle'
       ? { base: '#f8fafc', dark: '#cbd5e1', light: '#ffffff' } // White (Idle)
       : { base: '#ef4444', dark: '#991b1b', light: '#fca5a5' }; // Red (Stopped/Error)
-  
+
   return L.divIcon({
     className: 'custom-vehicle-icon',
     html: `
@@ -131,10 +130,9 @@ const SmoothVehicleMarker = ({ vehicle, onSelect }: { vehicle: Vehicle, onSelect
       <Popup className="custom-popup">
         <div className="p-2 cursor-pointer min-w-[150px]" onClick={() => onSelect?.(vehicle)}>
           <h3 className="font-bold text-slate-900 dark:text-white">{vehicle.name}</h3>
-          <p className="text-slate-600 dark:text-slate-300">Status: <span className={`font-semibold ${
-            vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' : 
-            vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
-          }`}>{vehicle.status.toUpperCase()}</span></p>
+          <p className="text-slate-600 dark:text-slate-300">Status: <span className={`font-semibold ${vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' :
+              vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+            }`}>{vehicle.status.toUpperCase()}</span></p>
           <p className="text-slate-600 dark:text-slate-300">Speed: {Math.round(vehicle.speed)} km/h</p>
           <p className="text-slate-600 dark:text-slate-300">Fuel: {typeof vehicle.fuelLevel === 'number' ? vehicle.fuelLevel.toFixed(2) : vehicle.fuelLevel}%</p>
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">Click for details &rarr;</p>
@@ -142,6 +140,42 @@ const SmoothVehicleMarker = ({ vehicle, onSelect }: { vehicle: Vehicle, onSelect
       </Popup>
     </Marker>
   );
+};
+
+// Controls map view state (zoom/center)
+const MapController = ({ vehicles, route, center, zoom }: MapProps) => {
+  const map = useMap();
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    // 1. Replay Mode: Always fit route bounds if route exists
+    if (route && route.length > 0) {
+      const bounds = L.latLngBounds(route.map(p => [p.lat, p.lng]));
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+      return;
+    }
+
+    // 2. Live Mode: Auto-fit fleet on first load or fallback to user specific center
+    if (!hasInitialized.current && vehicles && vehicles.length > 0) {
+      if (vehicles.length === 1) {
+        map.setView([vehicles[0].currentLocation.lat, vehicles[0].currentLocation.lng], 16);
+      } else {
+        const bounds = L.latLngBounds(vehicles.map(v => [v.currentLocation.lat, v.currentLocation.lng]));
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+        }
+      }
+      hasInitialized.current = true;
+    } else if (!hasInitialized.current && (!vehicles || vehicles.length === 0)) {
+      // Just use default center provided
+      map.setView(center || [-3.316694, 114.590111], zoom || 16);
+      hasInitialized.current = true;
+    }
+  }, [vehicles, route, map, center, zoom]);
+
+  return null;
 };
 
 const MapComponent = ({ vehicles = [], route = [], center = [-3.316694, 114.590111], zoom = 16, onVehicleSelect }: MapProps) => {
@@ -155,17 +189,19 @@ const MapComponent = ({ vehicles = [], route = [], center = [-3.316694, 114.5901
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        
+
+        <MapController vehicles={vehicles} route={route} center={center} zoom={zoom} />
+
         {vehicles.map((vehicle) => (
-          <SmoothVehicleMarker 
-            key={vehicle.id} 
-            vehicle={vehicle} 
-            onSelect={onVehicleSelect} 
+          <SmoothVehicleMarker
+            key={vehicle.id}
+            vehicle={vehicle}
+            onSelect={onVehicleSelect}
           />
         ))}
 
         {route.length > 0 && (
-          <Polyline 
+          <Polyline
             positions={route.map(pt => [pt.lat, pt.lng])}
             color="blue"
             weight={4}

@@ -49,6 +49,7 @@ model Driver {
   joinedDate    DateTime
   totalTrips    Int       @default(0)
   vehicles      Vehicle[]
+  behaviorEvents DriverBehaviorEvent[]
   companyId     String?
   company       Company?  @relation(fields: [companyId], references: [id])
   createdAt     DateTime  @default(now())
@@ -76,6 +77,9 @@ model Vehicle {
   fuelTransactions FuelTransaction[]
   alerts          Alert[]
   maintenance     MaintenanceRecord[]
+  locationHistory LocationHistory[]
+  behaviorEvents DriverBehaviorEvent[]
+
 
   companyId       String?
   company         Company?          @relation(fields: [companyId], references: [id])
@@ -117,4 +121,28 @@ model MaintenanceRecord {
   provider    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model LocationHistory {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  lat       Float
+  lng       Float
+  speed     Float
+  heading   Float?
+  timestamp DateTime @default(now())
+
+  @@index([vehicleId, timestamp])
+}
+
+model DriverBehaviorEvent {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id])
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  type      String
+  value     Float
+  timestamp DateTime @default(now())
 }

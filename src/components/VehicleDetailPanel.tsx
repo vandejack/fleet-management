@@ -24,11 +24,10 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
           {/* Vehicle Header */}
           <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-4 mb-3">
-              <div className={`p-3 rounded-full ${
-                vehicle.status === 'moving' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                vehicle.status === 'idle' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
-                'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-              }`}>
+              <div className={`p-3 rounded-full ${vehicle.status === 'moving' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                  vehicle.status === 'idle' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
+                    'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                }`}>
                 <Truck size={24} />
               </div>
               <div>
@@ -39,11 +38,10 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-500 dark:text-gray-400">Status</p>
-                <p className={`font-medium capitalize ${
-                  vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' :
-                  vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' :
-                  'text-red-600 dark:text-red-400'
-                }`}>{vehicle.status}</p>
+                <p className={`font-medium capitalize ${vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' :
+                    vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                  }`}>{vehicle.status}</p>
               </div>
               <div>
                 <p className="text-gray-500 dark:text-gray-400">Speed</p>
@@ -106,7 +104,9 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
+            <button
+              onClick={() => window.location.href = `/replay?vehicleId=${vehicle.id}`}
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
               View History
             </button>
             <button className="w-full py-2 px-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium text-sm">

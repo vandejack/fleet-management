@@ -1,25 +1,39 @@
 'use client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import Map from '@/components/Map';
-import { MOCK_ROUTE, Vehicle } from '@/utils/mockData';
+import { Vehicle } from '@/utils/mockData';
 import { useFleet } from '@/context/FleetContext';
 import { Play, Pause, RotateCcw, Calendar, Clock, Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { getVehicleHistory } from '@/lib/actions';
 
 export default function ReplayPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <ReplayContent />
+    </Suspense>
+  );
+}
+
+function ReplayContent() {
+  const params = useSearchParams();
+  const vehicleIdParam = params.get('vehicleId');
   const { vehicles } = useFleet();
+
+  const [route, setRoute] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [speed, setSpeed] = useState(1);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Filter State
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(vehicleIdParam || '');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(true);
 
-  // Initialize selected vehicle
+  // Initialize selected vehicle if not set by param
   useEffect(() => {
     if (vehicles.length > 0 && !selectedVehicleId) {
       setSelectedVehicleId(vehicles[0].id);
@@ -30,32 +44,55 @@ export default function ReplayPage() {
   useEffect(() => {
     const end = new Date();
     const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
-    setEndDate(end.toISOString().slice(0, 16));
-    setStartDate(start.toISOString().slice(0, 16));
+    const toLocalISO = (d: Date) => {
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+    };
+    setEndDate(toLocalISO(end));
+    setStartDate(toLocalISO(start));
   }, []);
 
-  // Mock vehicle for replay
+  // Fetch History
+  useEffect(() => {
+    if (selectedVehicleId && startDate && endDate) {
+      setIsPlaying(false);
+      setCurrentIndex(0);
+
+      getVehicleHistory(selectedVehicleId, startDate, endDate).then(res => {
+        if (res.success && res.route && res.route.length > 0) {
+          setRoute(res.route);
+        } else {
+          setRoute([]);
+        }
+      });
+    }
+  }, [selectedVehicleId, startDate, endDate]);
+
+  const currentRoute = route.length > 0 ? route : [];
+  const currentPoint = currentRoute[currentIndex] || { lat: -6.2, lng: 106.8, timestamp: new Date().toISOString() };
+
+  // Replay vehicle wrapper
   const selectedVehicleData = vehicles.find(v => v.id === selectedVehicleId);
-  
+
   const replayVehicle: Vehicle = {
     id: selectedVehicleId || 'replay-v1',
     name: selectedVehicleData?.name || 'Replay Vehicle',
     plate: selectedVehicleData?.plate || 'RE-PLAY-01',
     status: isPlaying ? 'moving' : 'idle',
-    currentLocation: MOCK_ROUTE[currentIndex],
+    currentLocation: { lat: currentPoint.lat, lng: currentPoint.lng, timestamp: currentPoint.timestamp },
     fuelLevel: selectedVehicleData?.fuelLevel || 80,
-    speed: 60,
+    speed: currentPoint.speed || 0,
     driver: selectedVehicleData?.driver,
-    lastMaintenance: selectedVehicleData?.lastMaintenance || '2024-01-01',
+    lastMaintenance: selectedVehicleData?.lastMaintenance,
     model: selectedVehicleData?.model,
     year: selectedVehicleData?.year
   };
 
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && currentRoute.length > 1) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex(prev => {
-          if (prev >= MOCK_ROUTE.length - 1) {
+          if (prev >= currentRoute.length - 1) {
             setIsPlaying(false);
             return prev;
           }
@@ -69,19 +106,7 @@ export default function ReplayPage() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, speed]);
-
-  // Calculate current replay time based on filter range
-  const currentReplayTime = (() => {
-    if (!startDate || !endDate) return new Date(MOCK_ROUTE[currentIndex].timestamp);
-    
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const duration = end - start;
-    const progress = currentIndex / (MOCK_ROUTE.length - 1);
-    
-    return new Date(start + (duration * progress));
-  })();
+  }, [isPlaying, speed, currentRoute.length]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentIndex(Number(e.target.value));
@@ -95,10 +120,10 @@ export default function ReplayPage() {
   return (
     <DashboardLayout>
       <div className="h-full w-full">
-        <Map 
-          vehicles={[replayVehicle]} 
-          route={MOCK_ROUTE}
-          center={[MOCK_ROUTE[currentIndex].lat, MOCK_ROUTE[currentIndex].lng]} 
+        <Map
+          vehicles={[replayVehicle]}
+          route={currentRoute}
+          center={[currentPoint.lat, currentPoint.lng]}
         />
       </div>
 
@@ -107,7 +132,7 @@ export default function ReplayPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Route Replay</h2>
-              <select 
+              <select
                 value={selectedVehicleId}
                 onChange={(e) => {
                   setSelectedVehicleId(e.target.value);
@@ -124,8 +149,8 @@ export default function ReplayPage() {
             </div>
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-2">
-                <input 
-                  type="datetime-local" 
+                <input
+                  type="datetime-local"
                   value={startDate}
                   onChange={(e) => {
                     setStartDate(e.target.value);
@@ -134,8 +159,8 @@ export default function ReplayPage() {
                   className="text-xs p-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
                 />
                 <span className="text-slate-400">-</span>
-                <input 
-                  type="datetime-local" 
+                <input
+                  type="datetime-local"
                   value={endDate}
                   onChange={(e) => {
                     setEndDate(e.target.value);
@@ -149,18 +174,29 @@ export default function ReplayPage() {
 
           <div className="flex items-center gap-4 mb-4">
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+              onClick={() => {
+                if (currentIndex >= currentRoute.length - 1) {
+                  setCurrentIndex(0);
+                }
+                setIsPlaying(!isPlaying);
+              }}
+              disabled={currentRoute.length < 2}
+              className={`p-2 text-white rounded-full transition-colors ${currentRoute.length < 2 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} />}
             </button>
-            
+
             <button
               onClick={reset}
               className="p-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
             >
               <RotateCcw size={20} />
             </button>
+
+            <span className="text-xs text-slate-500">
+              {currentRoute.length} points
+            </span>
 
             <div className="flex items-center gap-2 ml-auto">
               <span className="text-sm text-gray-500 dark:text-gray-400">Speed:</span>
@@ -169,9 +205,8 @@ export default function ReplayPage() {
                   <button
                     key={s}
                     onClick={() => setSpeed(s)}
-                    className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                      speed === s ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
+                    className={`px-3 py-1 rounded-md text-sm transition-colors ${speed === s ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
                   >
                     {s}x
                   </button>
@@ -184,14 +219,14 @@ export default function ReplayPage() {
             <input
               type="range"
               min={0}
-              max={MOCK_ROUTE.length - 1}
+              max={Math.max(0, currentRoute.length - 1)}
               value={currentIndex}
               onChange={handleSeek}
               className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
             <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>{startDate ? new Date(startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Start'}</span>
-              <span>{endDate ? new Date(endDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'End'}</span>
+              <span>{startDate ? new Date(startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Start'}</span>
+              <span>{endDate ? new Date(endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'End'}</span>
             </div>
           </div>
         </div>
