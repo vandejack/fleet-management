@@ -146,6 +146,26 @@ const server = net.createServer((socket) => {
                                     const internalBattery = ioData[67] || ioData[68];
                                     const gsmSignal = ioData[21];
 
+                                    // NEW: Real Telemetry Parsing
+                                    const odometer = (ioData[199] || ioData[16]) ? (Number(ioData[199] || ioData[16]) / 1000) : undefined; // Convert meters to km
+                                    const engineHours = ioData[102] ? (Number(ioData[102]) / 3600) : undefined; // Convert seconds to hours
+                                    const temperature = ioData[72] ? (Number(ioData[72]) / 10) : undefined; // Often sent in 0.1 units
+                                    const fuelLevel = ioData[30]; // 0-100%
+
+                                    await prisma.locationHistory.create({
+                                        data: {
+                                            vehicleId: vehicle.id,
+                                            lat, lng, speed, timestamp: locationDate,
+                                            ignition,
+                                            internalBattery: internalBattery ? Number(internalBattery) : undefined,
+                                            gsmSignal: gsmSignal ? Math.min(Number(gsmSignal), 5) : undefined,
+                                            odometer,
+                                            engineHours,
+                                            temperature,
+                                            fuelLevel: fuelLevel ? Number(fuelLevel) : undefined
+                                        }
+                                    });
+
                                     await prisma.vehicle.update({
                                         where: { id: vehicle.id },
                                         data: {
@@ -155,7 +175,11 @@ const server = net.createServer((socket) => {
                                             lastLocationTime: locationDate,
                                             ignition,
                                             internalBattery: internalBattery ? Number(internalBattery) : undefined,
-                                            gsmSignal: gsmSignal ? Math.min(Number(gsmSignal), 5) : undefined
+                                            gsmSignal: gsmSignal ? Math.min(Number(gsmSignal), 5) : undefined,
+                                            odometer: odometer || undefined,
+                                            engineHours: engineHours || undefined,
+                                            temperature: temperature || undefined,
+                                            fuelLevel: fuelLevel ? Number(fuelLevel) : undefined
                                         }
                                     });
 
