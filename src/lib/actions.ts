@@ -359,3 +359,26 @@ export async function getVehicleHistory(vehicleId: string, start?: string, end?:
     }
 }
 
+export async function getVehicleBehaviorEvents(vehicleId: string) {
+    try {
+        const events = await prisma.driverBehaviorEvent.findMany({
+            where: { vehicleId },
+            orderBy: { timestamp: 'desc' },
+            take: 10
+        });
+
+        return {
+            success: true,
+            events: events.map(e => ({
+                id: e.id,
+                type: e.type,
+                value: e.value,
+                timestamp: e.timestamp.toISOString()
+            }))
+        };
+    } catch (error) {
+        console.error('Failed to fetch behavior events:', error);
+        return { success: false, error: 'Failed to fetch behavior events', events: [] };
+    }
+}
+

@@ -1,6 +1,9 @@
 'use client';
 import { Vehicle } from '@/utils/mockData';
-import { X, User, Phone, Truck, Calendar, Wrench, Battery, Signal, Gauge, Clock, Thermometer, Power } from 'lucide-react';
+import { X, User, Phone, Truck, Calendar, Wrench, Battery, Signal, Gauge, Clock, Thermometer, Power, AlertCircle, Eye, EyeOff, Cigarette, PhoneCall, UserMinus, Coffee } from 'lucide-react';
+import { getVehicleBehaviorEvents } from '@/lib/actions';
+import { useState, useEffect } from 'react';
+import { BehaviorEvent } from '@/utils/mockData';
 
 interface VehicleDetailPanelProps {
   vehicle: Vehicle | null;
@@ -8,7 +11,46 @@ interface VehicleDetailPanelProps {
 }
 
 export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps) => {
+  const [behaviorEvents, setBehaviorEvents] = useState<BehaviorEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (vehicle) {
+      const fetchEvents = async () => {
+        setLoading(true);
+        const result = await getVehicleBehaviorEvents(vehicle.id);
+        if (result.success && result.events) {
+          setBehaviorEvents(result.events);
+        }
+        setLoading(false);
+      };
+      fetchEvents();
+
+      // Refresh events every 10 seconds while panel is open
+      const interval = setInterval(fetchEvents, 10000);
+      return () => clearInterval(interval);
+    } else {
+      setBehaviorEvents([]);
+    }
+  }, [vehicle]);
+
   if (!vehicle) return null;
+
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case 'DROWSINESS': return <EyeOff className="text-red-500" size={16} />;
+      case 'DISTRACTION': return <Eye className="text-orange-500" size={16} />;
+      case 'YAWNING': return <Coffee className="text-yellow-500" size={16} />;
+      case 'PHONE_USAGE': return <PhoneCall className="text-red-500" size={16} />;
+      case 'SMOKING': return <Cigarette className="text-orange-500" size={16} />;
+      case 'DRIVER_ABSENCE': return <UserMinus className="text-red-600" size={16} />;
+      default: return <AlertCircle className="text-blue-500" size={16} />;
+    }
+  };
+
+  const getEventLabel = (type: string) => {
+    return type.replace('_', ' ');
+  };
 
   return (
     <div className={`fixed right-4 top-4 h-[calc(100vh-32px)] w-96 transition-transform duration-300 ease-in-out print:hidden bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg z-[3000] overflow-y-auto border border-white/10 ${vehicle ? 'translate-x-0' : 'translate-x-[120%]'}`}>
@@ -167,23 +209,69 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
             </div>
           </div>
 
-          {/* Driver Info */}
+          {/* Fatigue & Behavior Monitor Section */}
           <div>
             <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white">
+              <EyeOff size={18} />
+              Fatigue Monitor (Movon)
+            </h4>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-inner">
+              {loading && behaviorEvents.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                  Loading events...
+                </div>
+              ) : behaviorEvents.length > 0 ? (
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {behaviorEvents.map((event) => (
+                    <div key={event.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="flex items-center gap-2 font-bold text-xs dark:text-white">
+                          {getEventIcon(event.type)}
+                          {getEventLabel(event.type)}
+                        </span>
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {new Date(event.timestamp).toLocaleDateString()}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                          ID: {event.id.slice(-4).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-gray-50/50 dark:bg-slate-900/50">
+                  <div className="flex flex-col items-center gap-2 text-gray-400" >
+                    <AlertCircle size={32} className="opacity-20" />
+                    <p className="text-xs" > No fatigue events detected recently.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Driver Info */}
+          <div>
+            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white" >
               <User size={18} />
               Driver Information
             </h4>
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4" >
+              <div className="flex items-center gap-3 mb-3" >
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold" >
                   {vehicle.driver?.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-medium dark:text-white">{vehicle.driver?.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Primary Driver</p>
+                  <p className="font-medium dark:text-white" > {vehicle.driver?.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400" > Primary Driver</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" >
                 <Phone size={16} />
                 <span>{vehicle.driver?.phone}</span>
               </div>
@@ -192,37 +280,37 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Vehicle Specs */}
           <div>
-            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white">
+            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white" >
               <Truck size={18} />
               Specifications
             </h4>
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">Model</span>
-                <span className="font-medium dark:text-white">{vehicle.model}</span>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3" >
+              <div className="flex justify-between items-center" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm" > Model</span>
+                <span className="font-medium dark:text-white" > {vehicle.model}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">Year</span>
-                <span className="font-medium dark:text-white">{vehicle.year}</span>
+              <div className="flex justify-between items-center" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm" > Year</span>
+                <span className="font-medium dark:text-white" > {vehicle.year}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700">
-                <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
+              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2" >
                   <Wrench size={14} />
                   Last Maintenance
                 </span>
-                <span className="font-medium text-sm dark:text-white">{vehicle.lastMaintenance}</span>
+                <span className="font-medium text-sm dark:text-white" > {vehicle.lastMaintenance}</span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3" >
             <button
               onClick={() => window.location.href = `/replay?vehicleId=${vehicle.id}`}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" >
               View History
             </button>
-            <button className="w-full py-2 px-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium text-sm">
+            <button className="w-full py-2 px-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium text-sm" >
               Contact Driver
             </button>
           </div>

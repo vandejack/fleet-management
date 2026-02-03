@@ -39,6 +39,14 @@ export interface Vehicle {
   odometer?: number;
   engineHours?: number;
   temperature?: number;
+  behaviorEvents?: BehaviorEvent[];
+}
+
+export interface BehaviorEvent {
+  id: string;
+  type: string;
+  value: number;
+  timestamp: string;
 }
 
 export interface FuelRecord {
