@@ -110,7 +110,6 @@ const server = net.createServer((socket) => {
                             readIOs(isExt, 1);
                             readIOs(isExt, 2);
                             readIOs(isExt, 4);
-                            readIOs(isExt, 4);
                             readIOs(isExt, 8);
 
                             console.log(`[DEBUG] ${imei} Record ${i} IOs:`, Object.keys(ioData).join(', '));
