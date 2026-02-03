@@ -47,6 +47,7 @@ export interface BehaviorEvent {
   type: string;
   value: number;
   timestamp: string;
+  evidenceUrl?: string | null;
 }
 
 export interface FuelRecord {
