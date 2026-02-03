@@ -163,5 +163,6 @@ model DriverBehaviorEvent {
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
   type      String
   value     Float
+  evidenceUrl String?
   timestamp DateTime @default(now())
 }
