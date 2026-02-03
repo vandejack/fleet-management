@@ -34,7 +34,7 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
 
   return (
     <div
-      className={`w-64 floating-panel text-white flex flex-col p-4 z-[2000] transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto gap-4 border border-white/10 transition-colors flex-shrink-0 md:w-auto ${isMapPage ? '' : 'fixed left-0 top-0 border-r border-white/10 rounded-none h-screen'
+      className={`w-64 floating-panel text-white flex flex-col p-4 z-[2000] transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto gap-4 border border-white/10 transition-colors flex-shrink-0 md:w-auto h-full ${isMapPage ? '' : 'fixed left-0 top-0 border-r border-white/10 rounded-none h-screen'
         }`}
     >
       <div className="border-b border-white/10 pt-4 pb-4 bg-slate-900/0 mb-4 flex flex-col items-center justify-center gap-2">
