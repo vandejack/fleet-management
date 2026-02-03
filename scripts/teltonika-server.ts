@@ -86,6 +86,11 @@ const server = net.createServer((socket) => {
                         }
                     };
                     readIOs(1); readIOs(2); readIOs(4); readIOs(8);
+                    // Log the IDs received for debugging
+                    const keys = Object.keys(ioData);
+                    if (keys.some(k => parseInt(k) > 1000)) {
+                        console.log(`[DEBUG] High-range IOs found in ${codecId === 0x8E ? '8E' : '8'}:`, JSON.stringify(ioData));
+                    }
                     // Codec 8E might have variable length IOs (X bytes), skipping for now as Movon uses std
                 }
 
@@ -165,9 +170,10 @@ const server = net.createServer((socket) => {
                     };
 
                     for (const [id, value] of Object.entries(ioData)) {
-                        const eventType = movonMap[id];
+                        const eventType = movonMap[id as unknown as keyof typeof movonMap];
+                        // console.log(`[DEBUG] Checking IO ID: ${id}, Value: ${value}, Driver: ${vehicle.driver?.name}`);
                         if (eventType && value === 1 && vehicle.driver) {
-                            console.log(`Movon Event detected: ${eventType} for ${vehicle.driver.name}`);
+                            console.log(`Movon Event detected: ${eventType} for ${vehicle.driver.name} (IO ID: ${id})`);
                             await prisma.driverBehaviorEvent.create({
                                 data: {
                                     driverId: vehicle.driver.id, vehicleId: vehicle.id,
