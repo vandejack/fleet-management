@@ -146,6 +146,11 @@ const server = net.createServer((socket) => {
                                     const internalBattery = ioData[67] || ioData[68];
                                     const gsmSignal = ioData[21];
 
+                                    console.log(`[DEBUG] ${imei} IO IDs present:`, Object.keys(ioData).join(', '));
+                                    if (ioData[199] || ioData[16] || ioData[102] || ioData[72]) {
+                                        console.log(`[DEBUG] ${imei} Relevant IOs: Odo: ${ioData[199]}/${ioData[16]}, EH: ${ioData[102]}, Temp: ${ioData[72]}`);
+                                    }
+
                                     // NEW: Real Telemetry Parsing
                                     const odometer = (ioData[199] || ioData[16]) ? (Number(ioData[199] || ioData[16]) / 1000) : undefined; // Convert meters to km
                                     const engineHours = ioData[102] ? (Number(ioData[102]) / 3600) : undefined; // Convert seconds to hours
