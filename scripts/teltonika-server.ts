@@ -34,12 +34,14 @@ const server = net.createServer((socket) => {
         }
 
         // 2. AVL Data Parsing
+        console.log(`[RAW] Length: ${data.length}, Hex: ${data.toString('hex')}`);
+
         if (data.length > 10 && data.readUInt32BE(0) === 0) {
             const dataLength = data.readUInt32BE(4);
             const codecId = data.readUInt8(8);
             const recordCount = data.readUInt8(9);
 
-            console.log(`Received ${recordCount} records, Codec ID: 0x${codecId.toString(16).toUpperCase()}`);
+            console.log(`[PARSE] Codec ID: 0x${codecId.toString(16).toUpperCase()}, Records: ${recordCount}, DataLen: ${dataLength}`);
 
             let offset = 10;
             const records = [];
