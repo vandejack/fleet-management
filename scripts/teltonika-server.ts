@@ -131,12 +131,21 @@ const server = net.createServer((socket) => {
                     const fuelLevel = ioData[72] !== undefined ? ioData[72] : undefined; // percentage or raw value
                     const temperature = ioData[72] !== undefined ? ioData[72] : undefined; // °C (ID may vary)
 
+                    // Validate timestamp
+                    const timestampNum = Number(timestamp);
+                    const locationDate = new Date(timestampNum);
+
+                    if (isNaN(locationDate.getTime())) {
+                        console.error(`Invalid timestamp received for ${imei}: ${timestampNum}`);
+                        continue;
+                    }
+
                     // Update Vehicle
                     const vehicle = await prisma.vehicle.update({
                         where: { imei },
                         data: {
                             lat, lng, speed,
-                            lastLocationTime: new Date(Number(timestamp)),
+                            lastLocationTime: locationDate,
                             status: speed > 0 ? 'moving' : 'stopped',
                             // Update telemetry fields
                             ignition,
