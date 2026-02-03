@@ -86,12 +86,36 @@ const server = net.createServer((socket) => {
                         }
                     };
                     readIOs(1); readIOs(2); readIOs(4); readIOs(8);
+
+                    // Codec 8E Variable Length IOs (NX bytes)
+                    try {
+                        const nxCount = data.readUInt16BE(offset); offset += 2;
+                        for (let j = 0; j < nxCount; j++) {
+                            const id = data.readUInt16BE(offset); offset += 2;
+                            const length = data.readUInt16BE(offset); offset += 2;
+                            const val = data.toString('hex', offset, offset + length); // Store as hex string for now
+                            const valText = data.toString('utf8', offset, offset + length).replace(/[^\x20-\x7E]/g, '');
+                            offset += length;
+                            ioData[id] = 1; // Mark as present for event detection
+                            console.log(`[NX] ID: ${id}, Length: ${length}, Hex: ${val}, Text: ${valText}`);
+
+                            // Map Movon Text to Event Type if found
+                            if (valText.includes('Absence')) ioData[11705] = 1;
+                            if (valText.includes('Drowsiness')) ioData[11700] = 1;
+                            if (valText.includes('Distraction')) ioData[11701] = 1;
+                            if (valText.includes('Yawning')) ioData[11702] = 1;
+                            if (valText.includes('Smoking')) ioData[11704] = 1;
+                            if (valText.includes('Phone')) ioData[11703] = 1;
+                        }
+                    } catch (e) {
+                        // console.log("No NX elements or parsing error");
+                    }
+
                     // Log the IDs received for debugging
                     const keys = Object.keys(ioData);
                     if (keys.some(k => parseInt(k) > 1000)) {
-                        console.log(`[DEBUG] High-range IOs found in ${codecId === 0x8E ? '8E' : '8'}:`, JSON.stringify(ioData));
+                        console.log(`[DEBUG] High-range IOs found in 8E:`, JSON.stringify(ioData));
                     }
-                    // Codec 8E might have variable length IOs (X bytes), skipping for now as Movon uses std
                 }
 
                 // Process Record
