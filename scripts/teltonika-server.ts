@@ -79,6 +79,14 @@ const server = net.createServer((socket) => {
 
                 for (let i = 0; i < recordCount; i++) {
                     const timestamp = data.readBigUInt64BE(offset); offset += 8;
+                    const timestampNum = Number(timestamp);
+                    const locationDate = new Date(timestampNum);
+                    console.log(`[PARSE] Record ${i} Timestamp: ${locationDate.toISOString()} (${timestampNum})`);
+
+                    if (isNaN(locationDate.getTime()) || locationDate.getFullYear() > 2100 || locationDate.getFullYear() < 2020) {
+                        console.error(`Skipping invalid/future timestamp for ${imei}: ${locationDate.toISOString()} (${timestampNum})`);
+                        continue;
+                    }
                     const priority = data.readUInt8(offset); offset += 1;
                     const lng = data.readInt32BE(offset) / 10000000; offset += 4;
                     const lat = data.readInt32BE(offset) / 10000000; offset += 4;
