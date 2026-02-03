@@ -239,7 +239,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                             </span>
                           )}
                         </span>
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-xs text-gray-400">
                           {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -357,10 +357,10 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
               <div className="absolute inset-0 pointer-events-none border-[1px] border-red-500/30 m-4 flex flex-col justify-between p-4">
                 <div className="flex justify-between text-[10px] text-red-500 font-mono">
                   <span>MOVON DSM ACTIVE</span>
-                  <span>{vehicle.plate}</span>
+                  <span>{vehicle?.plate}</span>
                 </div>
                 <div className="text-[10px] text-red-500 font-mono self-end">
-                  {new Date(selectedEvent.timestamp).toISOString()}
+                  {selectedEvent ? new Date(selectedEvent.timestamp).toISOString() : ''}
                 </div>
               </div>
             </div>
