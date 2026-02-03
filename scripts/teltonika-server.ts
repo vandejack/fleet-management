@@ -110,7 +110,13 @@ const server = net.createServer((socket) => {
                             readIOs(isExt, 1);
                             readIOs(isExt, 2);
                             readIOs(isExt, 4);
+                            readIOs(isExt, 4);
                             readIOs(isExt, 8);
+
+                            console.log(`[DEBUG] ${imei} Record ${i} IOs:`, Object.keys(ioData).join(', '));
+                            if (ioData[199] || ioData[16] || ioData[102] || ioData[72]) {
+                                console.log(`[DEBUG] ${imei} Relevant IOs: Odo: ${ioData[199]}/${ioData[16]}, EH: ${ioData[102]}, Temp: ${ioData[72]}`);
+                            }
 
                             if (isExt) {
                                 try {
@@ -146,10 +152,7 @@ const server = net.createServer((socket) => {
                                     const internalBattery = ioData[67] || ioData[68];
                                     const gsmSignal = ioData[21];
 
-                                    console.log(`[DEBUG] ${imei} IO IDs present:`, Object.keys(ioData).join(', '));
-                                    if (ioData[199] || ioData[16] || ioData[102] || ioData[72]) {
-                                        console.log(`[DEBUG] ${imei} Relevant IOs: Odo: ${ioData[199]}/${ioData[16]}, EH: ${ioData[102]}, Temp: ${ioData[72]}`);
-                                    }
+                                    console.log(`[DEBUG] ${imei} Vehicle Found, saving data...`);
 
                                     // NEW: Real Telemetry Parsing
                                     const odometer = (ioData[199] || ioData[16]) ? (Number(ioData[199] || ioData[16]) / 1000) : undefined; // Convert meters to km
