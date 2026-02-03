@@ -13,6 +13,7 @@ interface VehicleDetailPanelProps {
 export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps) => {
   const [behaviorEvents, setBehaviorEvents] = useState<BehaviorEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<BehaviorEvent | null>(null);
 
   useEffect(() => {
     if (vehicle) {
@@ -223,11 +224,20 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
               ) : behaviorEvents.length > 0 ? (
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
                   {behaviorEvents.map((event) => (
-                    <div key={event.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div
+                      key={event.id}
+                      className={`p-3 transition-colors ${event.evidenceUrl ? 'cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                      onClick={() => event.evidenceUrl && setSelectedEvent(event)}
+                    >
                       <div className="flex justify-between items-start mb-1">
                         <span className="flex items-center gap-2 font-bold text-xs dark:text-white">
                           {getEventIcon(event.type)}
                           {getEventLabel(event.type)}
+                          {event.evidenceUrl && (
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-1 rounded animate-pulse">
+                              Snapshot
+                            </span>
+                          )}
                         </span>
                         <span className="text-[10px] text-gray-400">
                           {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -316,6 +326,55 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
           </div>
         </div>
       </div>
+
+      {/* Snapshot Modal Overlay */}
+      {selectedEvent && selectedEvent.evidenceUrl && (
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative max-w-2xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50 text-white">
+              <div className="flex items-center gap-3">
+                {getEventIcon(selectedEvent.type)}
+                <div>
+                  <h3 className="font-bold text-sm">Fatigue Snapshot</h3>
+                  <p className="text-[10px] text-slate-400">
+                    {getEventLabel(selectedEvent.type)} • {new Date(selectedEvent.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="relative aspect-video bg-black flex items-center justify-center">
+              <img
+                src={selectedEvent.evidenceUrl}
+                alt="Fatigue Evidence"
+                className="max-w-full max-h-full object-contain"
+              />
+              <div className="absolute inset-0 pointer-events-none border-[1px] border-red-500/30 m-4 flex flex-col justify-between p-4">
+                <div className="flex justify-between text-[10px] text-red-500 font-mono">
+                  <span>MOVON DSM ACTIVE</span>
+                  <span>{vehicle.plate}</span>
+                </div>
+                <div className="text-[10px] text-red-500 font-mono self-end">
+                  {new Date(selectedEvent.timestamp).toISOString()}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-800/30 flex justify-end gap-3">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="px-4 py-2 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
