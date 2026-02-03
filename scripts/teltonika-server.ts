@@ -25,14 +25,21 @@ const server = net.createServer((socket) => {
     console.log('Client connected');
 
     let imei = '';
+    let buffer = Buffer.alloc(0);
 
-    socket.on('data', async (data) => {
-        console.log('Received data:', data.toString('hex'));
+    socket.on('data', async (chunk) => {
+        console.log('Received chunk:', chunk.toString('hex'));
+        buffer = Buffer.concat([buffer, chunk]);
 
         // 1. IMEI Handshake
         if (!imei) {
-            const length = data.readUInt16BE(0);
-            imei = data.toString('ascii', 2, 2 + length);
+            if (buffer.length < 2) return;
+            const length = buffer.readUInt16BE(0);
+            if (buffer.length < 2 + length) return;
+
+            imei = buffer.slice(2, 2 + length).toString('ascii');
+            buffer = buffer.slice(2 + length);
+
             console.log(`Device IMEI: ${imei}`);
             const response = Buffer.alloc(1);
             response.writeUInt8(1, 0);
@@ -40,13 +47,28 @@ const server = net.createServer((socket) => {
             return;
         }
 
-        // 2. AVL Data Parsing
-        console.log(`[RAW] Length: ${data.length}, Hex: ${data.toString('hex')}`);
+        // 2. AVL Data Parsing (Loop in case multiple packets are in buffer)
+        while (buffer.length >= 12) {
+            // Check for preamble
+            if (buffer.readUInt32BE(0) !== 0) {
+                // If no preamble, we might be out of sync, skip 1 byte and try again
+                buffer = buffer.slice(1);
+                continue;
+            }
 
-        if (data.length > 10 && data.readUInt32BE(0) === 0) {
-            const dataLength = data.readUInt32BE(4);
+            const dataLength = buffer.readUInt32BE(4);
+            const totalPacketLength = dataLength + 12; // 4 Preamble + 4 Len + L + 4 CRC
+
+            if (buffer.length < totalPacketLength) {
+                // Wait for more data
+                console.log(`[WAIT] Need ${totalPacketLength} bytes, have ${buffer.length}`);
+                break;
+            }
+
+            const data = buffer.slice(0, totalPacketLength);
+            buffer = buffer.slice(totalPacketLength);
+
             const codecId = data.readUInt8(8);
-
             console.log(`[PARSE] Codec ID: 0x${codecId.toString(16).toUpperCase()}, DataLen: ${dataLength}`);
 
             if (codecId === 0x08 || codecId === 0x8E) {
