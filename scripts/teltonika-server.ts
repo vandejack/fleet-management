@@ -241,7 +241,7 @@ const server = net.createServer((socket) => {
                 response.writeUInt32BE(recordCount, 0);
                 socket.write(response);
 
-            } else if (codecId === 12 || codecId === 13) {
+            } else if (codecId === 12 || codecId === 13 || codecId === 15) {
                 // Codec 12/13: GPRS commands and RS232/RS485 data
                 const recordCount = data.readUInt8(9);
                 const type = data.readUInt8(10);
