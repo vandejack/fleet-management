@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { authenticate } from './actions';
 import { Cinzel } from 'next/font/google';
-import { Hexagon, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Map from '@/components/Map';
@@ -20,8 +20,8 @@ export default function LoginPage() {
       </div>
       {/* Background Map */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <Map 
-          center={[-3.316694, 114.590111]} 
+        <Map
+          center={[-3.316694, 114.590111]}
           zoom={16}
           vehicles={[]}
         />
@@ -41,13 +41,13 @@ export default function LoginPage() {
         <div className="bg-slate-900/95 p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20 z-0"></div>
           <div className="relative z-10">
-            <div className="mx-auto w-16 h-16 flex items-center justify-center mb-4 relative">
-               <div className="absolute inset-0 bg-cyan-500/50 blur-lg rounded-full"></div>
-               <Hexagon size={48} className="text-cyan-400 fill-cyan-400 relative z-10" />
+            <div className="mx-auto mb-4 flex items-center justify-center">
+              <img
+                src="/aicrone-logo.png"
+                alt="AICrone Logo"
+                className="h-6 w-auto object-contain brightness-0 invert"
+              />
             </div>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-wider font-sans uppercase">
-              AICRONE
-            </h1>
             <p className="text-blue-200/70 text-xs uppercase tracking-[0.3em] mt-2 font-light">
               Fleet Management System
             </p>

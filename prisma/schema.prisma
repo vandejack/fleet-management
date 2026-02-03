@@ -71,6 +71,15 @@ model Vehicle {
   year            Int?
   fuelType        String?           // 'diesel' | 'petrol' | 'electric' | 'hybrid'
   
+  // Telemetry fields from GPS device
+  ignition        Boolean?          // Engine ignition status
+  vehicleBattery  Float?            // Vehicle battery voltage (mV)
+  internalBattery Float?            // GPS device battery voltage (mV)
+  gsmSignal       Int?              // GSM signal strength (0-5)
+  odometer        Float?            // Total odometer reading (km)
+  engineHours     Float?            // Total engine hours
+  temperature     Float?            // Temperature reading (°C)
+  
   driverId        String?
   driver          Driver?           @relation(fields: [driverId], references: [id])
   
@@ -132,6 +141,16 @@ model LocationHistory {
   speed     Float
   heading   Float?
   timestamp DateTime @default(now())
+  
+  // Telemetry fields
+  ignition        Boolean?
+  vehicleBattery  Float?
+  internalBattery Float?
+  gsmSignal       Int?
+  odometer        Float?
+  engineHours     Float?
+  fuelLevel       Float?
+  temperature     Float?
 
   @@index([vehicleId, timestamp])
 }

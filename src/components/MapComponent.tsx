@@ -5,62 +5,42 @@ import L from 'leaflet';
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
 
-// Custom vehicle icon
+// Custom vehicle icon - Apple Maps style circle (minimal)
 const getVehicleIcon = (status: string) => {
-  // Colors matching the user provided image (Blue, White, Red)
-  const colors = status === 'moving'
-    ? { base: '#3b82f6', dark: '#1e3a8a', light: '#60a5fa' } // Blue (Moving)
+  // Colors for different statuses (Apple style)
+  const color = status === 'moving'
+    ? '#34C759' // Apple green (Moving)
     : status === 'idle'
-      ? { base: '#f8fafc', dark: '#cbd5e1', light: '#ffffff' } // White (Idle)
-      : { base: '#ef4444', dark: '#991b1b', light: '#fca5a5' }; // Red (Stopped/Error)
+      ? '#FF9500' // Apple orange (Idle)
+      : '#FF3B30'; // Apple red (Stopped)
 
   return L.divIcon({
     className: 'custom-vehicle-icon',
     html: `
-      <div style="width: 52px; height: 52px; position: relative; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.5)); transform-style: preserve-3d; perspective: 1000px;">
-        <!-- Isometric 3D Box Truck SVG -->
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 100%; height: 100%; overflow: visible;">
-          <!-- Shadow -->
-          <ellipse cx="50" cy="85" rx="30" ry="10" fill="rgba(0,0,0,0.4)" filter="blur(4px)"/>
+      <div style="width: 26px; height: 26px; position: relative; display: flex; align-items: center; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));">
+          <!-- Outer white border ring -->
+          <circle cx="13" cy="13" r="13" fill="white"/>
           
-          <!-- Cargo Box - Left Face (Longer and Taller) -->
-          <path d="M15 45 L45 60 L45 85 L15 70 Z" fill="${colors.dark}" stroke="${colors.dark}" stroke-width="1"/>
-          
-          <!-- Cargo Box - Right Face -->
-          <path d="M45 60 L75 45 L75 70 L45 85 Z" fill="${colors.base}" stroke="${colors.base}" stroke-width="1"/>
-          
-          <!-- Cargo Box - Top Face -->
-          <path d="M15 45 L45 30 L75 45 L45 60 Z" fill="${colors.light}" stroke="${colors.light}" stroke-width="1"/>
-          
-          <!-- Cabin (Separate front part) - Left Face -->
-          <path d="M75 70 L85 75 L85 55 L75 45 Z" fill="${colors.dark}" fill-opacity="0.9"/>
-          
-          <!-- Cabin - Right Face -->
-          <path d="M85 75 L95 70 L95 50 L85 55 Z" fill="${colors.base}" fill-opacity="0.9"/>
-          
-          <!-- Cabin - Top Face -->
-          <path d="M75 45 L85 55 L95 50 L85 40 Z" fill="${colors.light}" fill-opacity="0.9"/>
-          
-          <!-- Windshield -->
-          <path d="M85 48 L92 51 L94 49 L87 46 Z" fill="#bae6fd" fill-opacity="0.9"/>
-          
-          <!-- Wheels -->
-          <path d="M25 75 L25 83 L30 85.5 L30 77.5 Z" fill="#1e293b"/>
-          <path d="M60 88 L60 96 L65 98.5 L65 90.5 Z" fill="#1e293b"/>
-          <path d="M85 78 L85 86 L90 88.5 L90 80.5 Z" fill="#1e293b"/>
-
-          <!-- Box Detail Lines (to match image ridges) -->
-           <path d="M45 35 L70 47.5" stroke="${colors.dark}" stroke-width="0.5" stroke-opacity="0.3" fill="none"/>
-           <path d="M45 40 L70 52.5" stroke="${colors.dark}" stroke-width="0.5" stroke-opacity="0.3" fill="none"/>
-
+          <!-- Main colored circle -->
+          <circle cx="13" cy="13" r="10" fill="${color}"/>
         </svg>
       </div>
     `,
-    iconSize: [52, 52],
-    iconAnchor: [26, 26],
-    popupAnchor: [0, -26]
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -13]
   });
 };
+
+
+
+
+
+
+
+
+
 
 
 interface MapProps {
@@ -131,7 +111,7 @@ const SmoothVehicleMarker = ({ vehicle, onSelect }: { vehicle: Vehicle, onSelect
         <div className="p-2 cursor-pointer min-w-[150px]" onClick={() => onSelect?.(vehicle)}>
           <h3 className="font-bold text-slate-900 dark:text-white">{vehicle.name}</h3>
           <p className="text-slate-600 dark:text-slate-300">Status: <span className={`font-semibold ${vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' :
-              vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+            vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
             }`}>{vehicle.status.toUpperCase()}</span></p>
           <p className="text-slate-600 dark:text-slate-300">Speed: {Math.round(vehicle.speed)} km/h</p>
           <p className="text-slate-600 dark:text-slate-300">Fuel: {typeof vehicle.fuelLevel === 'number' ? vehicle.fuelLevel.toFixed(2) : vehicle.fuelLevel}%</p>

@@ -36,14 +36,14 @@ export const AlertsList = ({ alerts, vehicles = [], onDismiss, onClearAll }: Ale
       )}
       {displayAlerts.map((alert) => {
         const driverName = getDriverName(alert.vehicleId);
-        
+
         return (
           <div
             key={alert.id}
-            className="group pointer-events-auto relative p-3 rounded-2xl shadow-xl border border-white/20 dark:border-white/10 backdrop-blur-2xl transition-all duration-300 animate-in slide-in-from-right hover:-translate-x-1 bg-white/60 dark:bg-slate-900/60"
+            className="group pointer-events-auto relative p-3 transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg border border-white/10 animate-in slide-in-from-right hover:-translate-x-1"
           >
             {/* Close Button - Mac style: visible on hover, top left usually but here top right for UX */}
-            <button 
+            <button
               onClick={() => onDismiss(alert.id)}
               className="absolute -top-2 -left-2 p-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-all shadow-md hover:bg-red-500 hover:text-white z-10"
             >
@@ -54,13 +54,13 @@ export const AlertsList = ({ alerts, vehicles = [], onDismiss, onClearAll }: Ale
               {/* App Icon / Type Indicator */}
               <div className={`
                 flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-md
-                ${alert.type === 'critical' ? 'bg-gradient-to-br from-red-500 to-red-600 text-white' : 
-                  alert.type === 'warning' ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white' : 
-                  'bg-gradient-to-br from-blue-500 to-blue-600 text-white'}
+                ${alert.type === 'critical' ? 'bg-gradient-to-br from-red-500 to-red-600 text-white' :
+                  alert.type === 'warning' ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white' :
+                    'bg-gradient-to-br from-blue-500 to-blue-600 text-white'}
               `}>
                 {alert.type === 'critical' ? <AlertCircle size={20} /> :
-                 alert.type === 'warning' ? <AlertTriangle size={20} /> :
-                 <Info size={20} />}
+                  alert.type === 'warning' ? <AlertTriangle size={20} /> :
+                    <Info size={20} />}
               </div>
 
               {/* Content */}
@@ -73,7 +73,7 @@ export const AlertsList = ({ alerts, vehicles = [], onDismiss, onClearAll }: Ale
                     {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                
+
                 <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
                   {alert.message}
                 </p>

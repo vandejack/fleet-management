@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <DashboardLayout>
       <div className="absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-64 z-[1000] flex md:grid md:grid-cols-1 gap-4 overflow-x-auto md:overflow-visible pointer-events-none no-scrollbar pb-2 md:pb-0">
-        <div className="bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto">
+        <div className="transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto p-4">
           <div className="p-3 bg-blue-500/20 rounded-full text-blue-400">
             <Truck size={24} />
           </div>
@@ -36,7 +36,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto">
+        <div className="transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto p-4">
           <div className="p-3 bg-green-500/20 rounded-full text-green-400">
             <Truck size={24} />
           </div>
@@ -46,7 +46,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-slate-900/40 backdrop-blur-lg p-4 rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto">
+        <div className="transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto flex items-center gap-4 border border-white/10 text-white transition-colors flex-shrink-0 w-64 md:w-auto p-4">
           <div className="p-3 bg-yellow-500/20 rounded-full text-yellow-400">
             <Battery size={24} />
           </div>

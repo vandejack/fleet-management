@@ -6,21 +6,119 @@ import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMobile } from '@/hooks/useMobile';
+import FloatingPanel from './FloatingPanel';
+import VehicleListPanel from './panels/VehicleListPanel';
+import AnalyticsPanel from './panels/AnalyticsPanel';
+import HistoryPanel from './panels/HistoryPanel';
+import SettingsPanel from './panels/SettingsPanel';
+import DriversPanel from './panels/DriversPanel';
+import MaintenancePanel from './panels/MaintenancePanel';
+import SchedulePanel from './panels/SchedulePanel';
+
+type PanelType = 'vehicles' | 'analytics' | 'history' | 'settings' | 'drivers' | 'maintenance' | 'schedule' | 'routes' | null;
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activePanel, setActivePanel] = useState<PanelType>(null);
   const pathname = usePathname();
   const isMapPage = pathname === '/';
   const isMobile = useMobile();
 
+  const handleMenuClick = (panel: PanelType) => {
+    setActivePanel(activePanel === panel ? null : panel);
+  };
+
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-900 relative">
-      {/* Background Pattern for Blur Visibility */}
+    <div className="relative w-full h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+      {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-5 dark:opacity-[0.02] pointer-events-none z-0"></div>
 
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      {/* Desktop Layout with Floating Panels */}
+      {!isMobile && isMapPage && (
+        <>
+          {/* Floating Sidebar */}
+          <div className="fixed top-4 left-4 h-[calc(100vh-32px)] z-[1000]">
+            <Sidebar
+              isOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              onMenuClick={handleMenuClick}
+              activePanel={activePanel}
+            />
+          </div>
+
+          {/* Floating Content Panels */}
+          <FloatingPanel
+            isOpen={activePanel === 'vehicles'}
+            onClose={() => setActivePanel(null)}
+            title="Vehicles"
+            width="28%"
+          >
+            <VehicleListPanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'analytics'}
+            onClose={() => setActivePanel(null)}
+            title="Fuel & Analytics"
+            width="50%"
+          >
+            <AnalyticsPanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'history'}
+            onClose={() => setActivePanel(null)}
+            title="Route Replay"
+            width="35%"
+          >
+            <HistoryPanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'settings'}
+            onClose={() => setActivePanel(null)}
+            title="System Settings"
+            width="30%"
+          >
+            <SettingsPanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'drivers'}
+            onClose={() => setActivePanel(null)}
+            title="Driver Directory"
+            width="35%"
+          >
+            <DriversPanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'maintenance'}
+            onClose={() => setActivePanel(null)}
+            title="Maintenance Logs"
+            width="40%"
+          >
+            <MaintenancePanel />
+          </FloatingPanel>
+
+          <FloatingPanel
+            isOpen={activePanel === 'schedule'}
+            onClose={() => setActivePanel(null)}
+            title="Operational Schedule"
+            width="35%"
+          >
+            <SchedulePanel />
+          </FloatingPanel>
+        </>
+      )}
+
+      {/* Traditional Sidebar for non-map pages on desktop */}
+      {!isMobile && !isMapPage && (
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          activePanel={activePanel}
+        />
       )}
 
       {/* Floating SOP Button (Hidden on Mobile) */}
@@ -34,8 +132,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         </Link>
       )}
 
+      {/* Main Content */}
       <main
-        className={`flex-1 relative flex flex-col transition-all duration-300 z-10 print:ml-0 print:h-auto print:overflow-visible 
+        className={`${isMapPage ? 'w-full h-full' : 'flex-1 relative flex flex-col'} transition-all duration-300 z-10 print:ml-0 print:h-auto print:overflow-visible 
           ${!isMobile && isSidebarOpen && !isMapPage ? 'ml-64' : 'ml-0'} 
           ${isMapPage ? 'overflow-hidden' : 'overflow-y-auto'}
           ${isMobile ? 'pb-16' : ''} 

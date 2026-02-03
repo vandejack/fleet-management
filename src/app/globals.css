@@ -24,16 +24,82 @@ body {
 }
 
 /* Map Dark Mode Filter */
-.map-dark-mode .leaflet-layer, 
-.map-dark-mode .leaflet-control-zoom-in, 
-.map-dark-mode .leaflet-control-zoom-out, 
-.map-dark-mode .leaflet-control-attribution { 
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); 
+.map-dark-mode .leaflet-layer,
+.map-dark-mode .leaflet-control-zoom-in,
+.map-dark-mode .leaflet-control-zoom-out,
+.map-dark-mode .leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
 
 /* Leaflet Popup Dark Mode */
 .dark .leaflet-popup-content-wrapper,
 .dark .leaflet-popup-tip {
-  background-color: #1e293b; /* slate-800 */
+  background-color: #1e293b;
+  /* slate-800 */
   color: white;
+}
+
+/* Custom Vehicle Icon - Prevent dark mode filter from affecting it */
+.custom-vehicle-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-dark-mode .custom-vehicle-icon {
+  filter: none !important;
+}
+
+/* Custom gap-2 spacing */
+.gap-2 {
+  gap: calc(var(--spacing) * 0);
+}
+
+/* Glassmorphism Floating Panel - Matching Provided Style */
+.floating-panel {
+  background: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+  transform: translateZ(0);
+  /* Force layer */
+  will-change: backdrop-filter;
+}
+
+.dark .floating-panel {
+  background: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* Slide animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.slide-in {
+  animation: slideIn 300ms ease-out forwards;
+}
+
+.slide-out {
+  animation: slideOut 300ms ease-in forwards;
 }

@@ -55,7 +55,7 @@ const server = net.createServer((socket) => {
                 const speed = data.readUInt16BE(offset); offset += 2;
 
                 let eventIoId = 0;
-                let ioData = {};
+                let ioData: Record<number, number> = {};
 
                 if (codecId === 0x08) {
                     // Codec 8 (1-byte IDs)
@@ -91,22 +91,50 @@ const server = net.createServer((socket) => {
 
                 // Process Record
                 try {
+                    // Extract telemetry data from IO elements
+                    // Common Teltonika IO IDs:
+                    const ignition = ioData[239] !== undefined ? ioData[239] === 1 : undefined;
+                    const vehicleBattery = ioData[66] !== undefined ? ioData[66] : undefined; // mV
+                    const internalBattery = ioData[67] !== undefined ? ioData[67] : undefined; // mV
+                    const gsmSignal = ioData[21] !== undefined ? ioData[21] : undefined; // 0-5
+                    const odometer = ioData[16] !== undefined ? ioData[16] / 1000 : undefined; // convert m to km
+                    const engineHours = ioData[199] !== undefined ? ioData[199] / 3600000 : undefined; // convert ms to hours
+                    const fuelLevel = ioData[72] !== undefined ? ioData[72] : undefined; // percentage or raw value
+                    const temperature = ioData[72] !== undefined ? ioData[72] : undefined; // °C (ID may vary)
+
                     // Update Vehicle
                     const vehicle = await prisma.vehicle.update({
                         where: { imei },
                         data: {
                             lat, lng, speed,
                             lastLocationTime: new Date(Number(timestamp)),
-                            status: speed > 0 ? 'moving' : 'stopped'
+                            status: speed > 0 ? 'moving' : 'stopped',
+                            // Update telemetry fields
+                            ignition,
+                            vehicleBattery,
+                            internalBattery,
+                            gsmSignal,
+                            odometer,
+                            engineHours,
+                            temperature
                         },
                         include: { driver: true }
                     });
 
-                    // Save History
+                    // Save History with telemetry data
                     await prisma.locationHistory.create({
                         data: {
                             vehicleId: vehicle.id, lat, lng, speed, heading: angle,
-                            timestamp: new Date(Number(timestamp))
+                            timestamp: new Date(Number(timestamp)),
+                            // Save telemetry data to history
+                            ignition,
+                            vehicleBattery,
+                            internalBattery,
+                            gsmSignal,
+                            odometer,
+                            engineHours,
+                            fuelLevel,
+                            temperature
                         }
                     });
 

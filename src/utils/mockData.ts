@@ -27,9 +27,18 @@ export interface Vehicle {
   speed: number; // km/h
   driver?: Driver;
   lastMaintenance?: string;
+  lastLocationTime?: Date | string;
   model?: string;
   year?: number;
   fuelType?: 'diesel' | 'petrol' | 'electric' | 'hybrid';
+  // Telemetry fields
+  ignition?: boolean;
+  vehicleBattery?: number;
+  internalBattery?: number;
+  gsmSignal?: number;
+  odometer?: number;
+  engineHours?: number;
+  temperature?: number;
 }
 
 export interface FuelRecord {
