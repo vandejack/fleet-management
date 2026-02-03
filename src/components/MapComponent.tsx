@@ -158,19 +158,67 @@ const MapController = ({ vehicles, route, center, zoom }: MapProps) => {
   return null;
 };
 
+// Custom Zoom Slider component
+const ZoomSlider = () => {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+
+  useEffect(() => {
+    const handleZoom = () => setZoom(map.getZoom());
+    map.on('zoomend', handleZoom);
+    return () => { map.off('zoomend', handleZoom); };
+  }, [map]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setZoom(val);
+    map.setZoom(val);
+  };
+
+  return (
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-4 bg-slate-900/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl transition-all hover:bg-slate-900/80 group">
+      <span className="text-white/40 group-hover:text-white/60 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+      </span>
+      <div className="relative flex items-center w-48 sm:w-64">
+        <input
+          type="range"
+          min={map.getMinZoom()}
+          max={map.getMaxZoom()}
+          value={zoom}
+          onChange={handleChange}
+          className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
+          style={{
+            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(zoom - map.getMinZoom()) / (map.getMaxZoom() - map.getMinZoom()) * 100}%, rgba(255,255,255,0.1) ${(zoom - map.getMinZoom()) / (map.getMaxZoom() - map.getMinZoom()) * 100}%, rgba(255,255,255,0.1) 100%)`
+          }}
+        />
+      </div>
+      <span className="text-white/40 group-hover:text-white/60 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+      </span>
+    </div>
+  );
+};
+
 const MapComponent = ({ vehicles = [], route = [], center = [-3.316694, 114.590111], zoom = 16, onVehicleSelect }: MapProps) => {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === 'dark';
 
   return (
     <div className={`relative h-full w-full ${isDarkMode ? 'map-dark-mode' : ''}`}>
-      <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', background: isDarkMode ? '#1e293b' : '#f1f5f9' }}>
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        zoomControl={false}
+        style={{ height: '100%', width: '100%', background: isDarkMode ? '#1e293b' : '#f1f5f9' }}
+      >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         <MapController vehicles={vehicles} route={route} center={center} zoom={zoom} />
+        <ZoomSlider />
 
         {vehicles.map((vehicle) => (
           <SmoothVehicleMarker
