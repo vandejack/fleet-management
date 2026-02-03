@@ -33,9 +33,11 @@ const server = net.createServer((socket) => {
                 buffer = buffer.slice(2 + length);
 
                 console.log(`Device IMEI: ${imei}`);
-                const response = Buffer.alloc(1);
-                response.writeUInt8(1, 0);
-                socket.write(response);
+                if (socket.writable) {
+                    const response = Buffer.alloc(1);
+                    response.writeUInt8(1, 0);
+                    socket.write(response);
+                }
                 return;
             }
 
@@ -43,7 +45,6 @@ const server = net.createServer((socket) => {
             while (buffer.length >= 12) {
                 // Check for preamble
                 if (buffer.readUInt32BE(0) !== 0) {
-                    // If no preamble, skip 1 byte and scan again
                     buffer = buffer.slice(1);
                     continue;
                 }
@@ -51,10 +52,7 @@ const server = net.createServer((socket) => {
                 const dataLength = buffer.readUInt32BE(4);
                 const totalPacketLength = dataLength + 12; // 4 Preamble + 4 Len + L + 4 CRC
 
-                if (buffer.length < totalPacketLength) {
-                    // Wait for more data
-                    break;
-                }
+                if (buffer.length < totalPacketLength) break;
 
                 const data = buffer.slice(0, totalPacketLength);
                 buffer = buffer.slice(totalPacketLength);
@@ -75,8 +73,6 @@ const server = net.createServer((socket) => {
 
                             if (isNaN(locationDate.getTime()) || locationDate.getFullYear() > 2100 || locationDate.getFullYear() < 2020) {
                                 console.error(`[SKIP] Invalid Timestamp for ${imei}: ${timestampNum}`);
-                                // To continue, we'd need to know the length of this record, which varies by IO count.
-                                // Safer to abort this packet's records if corrupted.
                                 break;
                             }
 
@@ -90,7 +86,6 @@ const server = net.createServer((socket) => {
 
                             let ioData: Record<number, number> = {};
 
-                            // Parse IOs
                             const readIOs = (isExtended: boolean, bytes: number) => {
                                 if (offset >= data.length) return;
                                 const count = isExtended ? data.readUInt16BE(offset) : data.readUInt8(offset);
@@ -109,10 +104,8 @@ const server = net.createServer((socket) => {
                             };
 
                             const isExt = (codecId === 0x8E);
-                            // Event ID
-                            offset += isExt ? 2 : 1;
-                            // IO Count Total
-                            offset += isExt ? 2 : 1;
+                            offset += isExt ? 2 : 1; // Event ID
+                            offset += isExt ? 2 : 1; // IO Count Total
 
                             readIOs(isExt, 1);
                             readIOs(isExt, 2);
@@ -131,7 +124,6 @@ const server = net.createServer((socket) => {
                                             const valText = data.toString('utf8', offset, offset + length).replace(/[^\x20-\x7E]/g, '');
                                             offset += length;
                                             ioData[id] = 1;
-
                                             if (valText.includes('Absence')) ioData[11705] = 1;
                                             if (valText.includes('Drowsiness')) ioData[11700] = 1;
                                             if (valText.includes('Distraction')) ioData[11701] = 1;
@@ -143,9 +135,8 @@ const server = net.createServer((socket) => {
                                 } catch (e) { }
                             }
 
-                            // Save to DB
                             try {
-                                const vehicle = await prisma.vehicle.findUnique({ where: { imei }, include: { driver: true } });
+                                const vehicle = await prisma.vehicle.findUnique({ where: { imei } });
                                 if (vehicle) {
                                     await prisma.locationHistory.create({
                                         data: { vehicleId: vehicle.id, lat, lng, speed, timestamp: locationDate }
@@ -178,7 +169,7 @@ const server = net.createServer((socket) => {
                                             await prisma.driverBehaviorEvent.create({
                                                 data: { vehicleId: vehicle.id, type: eventType, value: 1, timestamp: locationDate }
                                             });
-                                            console.log(`[EVENT] ${eventType} saved for ${imei}`);
+                                            console.log(`[EVENT] ${eventType} saved`);
                                         }
                                     }
                                 }
@@ -187,10 +178,11 @@ const server = net.createServer((socket) => {
                             }
                         }
 
-                        // Acknowledge
-                        const response = Buffer.alloc(4);
-                        response.writeUInt32BE(recordCount, 0);
-                        socket.write(response);
+                        if (socket.writable) {
+                            const response = Buffer.alloc(4);
+                            response.writeUInt32BE(recordCount, 0);
+                            socket.write(response, (err) => { if (err) console.error('[WRITE ERR]', err.message); });
+                        }
 
                     } else if (codecId === 12 || codecId === 13 || codecId === 15) {
                         const type = data.readUInt8(10);
@@ -226,7 +218,7 @@ const server = net.createServer((socket) => {
                                                     where: { id: recentEvent.id },
                                                     data: { evidenceUrl: `/snapshots/${filename}` }
                                                 });
-                                                console.log(`[SNAPSHOT] Linked to ${recentEvent.type}`);
+                                                console.log(`[SNAPSHOT] Linked`);
                                             }
                                         }
                                     } catch (err) { }
@@ -234,9 +226,11 @@ const server = net.createServer((socket) => {
                             }
                         }
 
-                        const response = Buffer.alloc(4);
-                        response.writeUInt32BE(recordCount, 0);
-                        socket.write(response);
+                        if (socket.writable) {
+                            const response = Buffer.alloc(4);
+                            response.writeUInt32BE(recordCount, 0);
+                            socket.write(response, (err) => { if (err) console.error('[WRITE ERR]', err.message); });
+                        }
                     }
                 } catch (parseErr) {
                     console.error(`[PARSE ERROR]`, parseErr.message);
@@ -247,8 +241,12 @@ const server = net.createServer((socket) => {
         }
     });
 
-    socket.on('end', () => console.log('Client disconnected'));
-    socket.on('error', (err) => console.error('Socket error:', err.message));
+    socket.on('end', () => console.log(`Client ${imei || 'unknown'} disconnected`));
+    socket.on('error', (err) => {
+        if ((err as any).code !== 'ECONNRESET' && (err as any).code !== 'EPIPE') {
+            console.error(`Socket error:`, err.message);
+        }
+    });
 });
 
 server.listen(PORT, () => {
