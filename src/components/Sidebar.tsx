@@ -58,8 +58,7 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
           </Link>
           <Link
             href="/analytics"
-            onClick={handleItemClick('analytics', '/analytics')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'analytics' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/analytics' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <BarChart3 size={20} />
@@ -67,8 +66,7 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
           </Link>
           <Link
             href="/replay"
-            onClick={handleItemClick('history', '/replay')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'history' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/replay' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <History size={20} />
@@ -76,8 +74,7 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
           </Link>
           <Link
             href="/drivers"
-            onClick={handleItemClick('drivers', '/drivers')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'drivers' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/drivers' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <User size={20} />
@@ -85,8 +82,7 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
           </Link>
           <Link
             href="/vehicles"
-            onClick={handleItemClick('vehicles', '/vehicles')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'vehicles' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/vehicles' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <Truck size={20} />
@@ -94,17 +90,15 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
           </Link>
           <Link
             href="/maintenance"
-            onClick={handleItemClick('maintenance', '/maintenance')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'maintenance' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/maintenance' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <Wrench size={20} />
             <span>Maintenance</span>
           </Link>
           <Link
-            href="/schedule"
-            onClick={handleItemClick('schedule', '/schedule')}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === 'schedule' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+            href="/calendar"
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/calendar' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
               }`}
           >
             <Calendar size={20} />

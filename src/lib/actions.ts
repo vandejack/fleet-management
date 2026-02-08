@@ -198,9 +198,13 @@ export async function createVehicle(data: any) {
     if (!user?.companyId && user?.role !== 'superadmin') throw new Error('Unauthorized');
 
     try {
+        // Sanitize IMEI: empty string -> null to allow multiple vehicles without IMEI
+        const imei = data.imei && data.imei.trim() !== '' ? data.imei.trim() : null;
+
         const vehicle = await prisma.vehicle.create({
             data: {
                 ...data,
+                imei,
                 companyId: user.companyId || data.companyId,
                 status: 'idle',
                 speed: 0,
@@ -212,9 +216,22 @@ export async function createVehicle(data: any) {
         });
         revalidatePath('/vehicles');
         return { success: true, vehicle };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to create vehicle:', error);
-        return { success: false, error: 'Failed to create vehicle' };
+
+        // Handle Unique Constraint Violations (P2002)
+        if (error.code === 'P2002') {
+            const target = error.meta?.target;
+            if (Array.isArray(target)) {
+                if (target.includes('imei')) {
+                    return { success: false, error: 'This IMEI is already registered.' };
+                }
+                if (target.includes('plate')) {
+                    return { success: false, error: 'This License Plate is already registered.' };
+                }
+            }
+        }
+        return { success: false, error: 'Failed to create vehicle. Please check your input.' };
     }
 }
 
@@ -274,8 +291,13 @@ export async function updateMaintenance(id: string, data: any) {
 }
 
 export async function getVehicles() {
+    const session = await auth();
     try {
+        const user = session?.user as any;
+        const where = user?.role === 'superadmin' ? {} : { companyId: user?.companyId };
+
         const vehicles = await prisma.vehicle.findMany({
+            where, // Apply the filter!
             include: {
                 driver: true
             },
@@ -349,7 +371,8 @@ export async function getVehicleHistory(vehicleId: string, start?: string, end?:
             lat: h.lat,
             lng: h.lng,
             timestamp: h.timestamp.toISOString(),
-            speed: h.speed
+            speed: h.speed,
+            ignition: h.ignition
         }));
 
         return { success: true, route };
@@ -373,7 +396,8 @@ export async function getVehicleBehaviorEvents(vehicleId: string) {
                 id: e.id,
                 type: e.type,
                 value: e.value,
-                timestamp: e.timestamp.toISOString()
+                timestamp: e.timestamp.toISOString(),
+                evidenceUrl: e.evidenceUrl
             }))
         };
     } catch (error) {

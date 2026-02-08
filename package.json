@@ -15,7 +15,8 @@
     "prisma:migrate:reset": "prisma migrate reset",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "tunnel": "ngrok start --config=./ngrok.yml fleet-tcp"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",

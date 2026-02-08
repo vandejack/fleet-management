@@ -67,6 +67,16 @@ interface FleetContextType {
   addMaintenance: (record: Omit<MaintenanceRecord, 'id'>) => void;
   updateMaintenance: (id: string, data: Partial<MaintenanceRecord>) => void;
   addFuelTransaction: (transaction: Omit<FuelTransaction, 'id'>) => void;
+  replayState: {
+    isActive: boolean;
+    vehicleId: string | null;
+    route: any[];
+    currentIndex: number;
+    isPlaying: boolean;
+  };
+  startReplay: (route: any[], vehicleId: string) => void;
+  stopReplay: () => void;
+  toggleReplay: () => void;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -397,6 +407,56 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     setFuelTransactions(prev => [newTransaction, ...prev]);
   };
 
+  // Replay State
+  const [replayState, setReplayState] = useState<{
+    isActive: boolean;
+    vehicleId: string | null;
+    route: any[];
+    currentIndex: number;
+    isPlaying: boolean;
+  }>({
+    isActive: false,
+    vehicleId: null,
+    route: [],
+    currentIndex: 0,
+    isPlaying: false
+  });
+
+  const startReplay = (route: any[], vehicleId: string) => {
+    setReplayState({
+      isActive: true,
+      vehicleId,
+      route,
+      currentIndex: 0,
+      isPlaying: true
+    });
+  };
+
+  const stopReplay = () => {
+    setReplayState(prev => ({ ...prev, isActive: false, isPlaying: false, currentIndex: 0 }));
+  };
+
+  const toggleReplay = () => {
+    setReplayState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+  };
+
+  // Replay Loop
+  useEffect(() => {
+    if (!replayState.isActive || !replayState.isPlaying || replayState.route.length === 0) return;
+
+    const interval = setInterval(() => {
+      setReplayState(prev => {
+        if (prev.currentIndex >= prev.route.length - 1) {
+          // End of route
+          return { ...prev, isPlaying: false };
+        }
+        return { ...prev, currentIndex: prev.currentIndex + 1 };
+      });
+    }, 1000); // 1 second per point
+
+    return () => clearInterval(interval);
+  }, [replayState.isActive, replayState.isPlaying, replayState.route]);
+
   return (
     <FleetContext.Provider value={{
       vehicles,
@@ -405,6 +465,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       settings,
       maintenance,
       fuelTransactions,
+      replayState,
       assignDriver,
       unassignDriver,
       dismissAlert,
@@ -416,7 +477,10 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       updateDriver,
       addMaintenance,
       updateMaintenance,
-      addFuelTransaction
+      addFuelTransaction,
+      startReplay,
+      stopReplay,
+      toggleReplay
     }}>
       {children}
     </FleetContext.Provider>

@@ -14,6 +14,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const server = net.createServer((socket) => {
+    console.log('ANTIGRAVITY STABILIZED SERVER v999 STARTING');
     console.log('Client connected');
 
     let imei = '';
@@ -22,6 +23,9 @@ const server = net.createServer((socket) => {
     socket.on('data', async (chunk) => {
         try {
             buffer = Buffer.concat([buffer, chunk]);
+
+            // DEBUG: Log raw incoming data to see what the device is sending
+            console.log(`[RAW] Received ${chunk.length} bytes from ${socket.remoteAddress}: ${chunk.toString('hex')}`);
 
             // 1. IMEI Handshake
             if (!imei) {
@@ -43,8 +47,40 @@ const server = net.createServer((socket) => {
 
             // 2. AVL Data Parsing (Loop in case multiple packets are in buffer)
             while (buffer.length >= 12) {
-                // Check for preamble
-                if (buffer.readUInt32BE(0) !== 0) {
+                // Check for Preamble (0x00000000) -> Data Packet
+                const isDataPacket = buffer.readUInt32BE(0) === 0;
+
+                if (!isDataPacket) {
+                    // If NOT data packet, check if it's a re-login (IMEI)
+                    // IMEI Packet: 2 bytes length + IMEI string
+                    if (buffer.length >= 2) {
+                        const imeiLen = buffer.readUInt16BE(0);
+                        // Sanity check: IMEI usually 15 chars, maybe a bit more/less. 
+                        // If length is reasonable (e.g., 10-25) and buffer has enough data
+                        if (imeiLen > 0 && imeiLen < 50 && buffer.length >= 2 + imeiLen) {
+                            try {
+                                const newImei = buffer.slice(2, 2 + imeiLen).toString('ascii');
+                                // Verify if it looks like an IMEI (digits)
+                                if (/^\d+$/.test(newImei)) {
+                                    console.log(`[INFO] Re-login / Handshake detected for IMEI: ${newImei}`);
+                                    imei = newImei;
+
+                                    // Send 1 for Accept
+                                    if (socket.writable) {
+                                        const response = Buffer.alloc(1);
+                                        response.writeUInt8(1, 0);
+                                        socket.write(response);
+                                    }
+
+                                    // Consume packet
+                                    buffer = buffer.slice(2 + imeiLen);
+                                    continue;
+                                }
+                            } catch (e) { }
+                        }
+                    }
+
+                    // If not valid data preamble AND not valid IMEI -> Skip 1 byte (Sync)
                     buffer = buffer.slice(1);
                     continue;
                 }
@@ -60,7 +96,12 @@ const server = net.createServer((socket) => {
                 try {
                     const codecId = data.readUInt8(8);
                     const recordCount = data.readUInt8(9);
-                    console.log(`[PARSE] ${imei} | Codec: 0x${codecId.toString(16).toUpperCase()} | Records: ${recordCount} | Size: ${dataLength}`);
+
+                    if (codecId === 0) {
+                        console.log(`[WARN] Codec 0 Detected from ${imei}. Dump: ${data.toString('hex')}`);
+                    } else {
+                        console.log(`[PARSE] ${imei} | Codec: 0x${codecId.toString(16).toUpperCase()} | Records: ${recordCount} | Size: ${dataLength}`);
+                    }
 
                     if (codecId === 0x08 || codecId === 0x8E) {
                         let offset = 10;
@@ -104,6 +145,7 @@ const server = net.createServer((socket) => {
                             };
 
                             const isExt = (codecId === 0x8E);
+                            console.log(`[DEBUG_V1000] ${imei} Codec: ${codecId.toString(16)}, AVL Part Hex: ${data.slice(offset, offset + 20).toString('hex')}`);
                             offset += isExt ? 2 : 1; // Event ID
                             offset += isExt ? 2 : 1; // IO Count Total
 
@@ -112,21 +154,21 @@ const server = net.createServer((socket) => {
                             readIOs(isExt, 4);
                             readIOs(isExt, 8);
 
-                            console.log(`[DEBUG] ${imei} Record ${i} IOs:`, Object.keys(ioData).join(', '));
-                            if (ioData[199] || ioData[16] || ioData[102] || ioData[72]) {
-                                console.log(`[DEBUG] ${imei} Relevant IOs: Odo: ${ioData[199]}/${ioData[16]}, EH: ${ioData[102]}, Temp: ${ioData[72]}`);
-                            }
+                            console.log(`[DEBUG_V1000] ${imei} Rec${i} IOs:`, Object.keys(ioData).join(', '));
+                            console.log(`[DEBUG_V1000] Offset: ${offset}, DataLen: ${data.length}, isExt: ${isExt}`);
 
                             if (isExt) {
                                 try {
                                     if (offset + 2 <= data.length) {
                                         const nxCount = data.readUInt16BE(offset); offset += 2;
+                                        console.log(`[DEBUG_V1000] ${imei} Codec 8E VL IO Count: ${nxCount}`);
                                         for (let j = 0; j < nxCount; j++) {
                                             if (offset + 4 > data.length) break;
                                             const id = data.readUInt16BE(offset); offset += 2;
                                             const length = data.readUInt16BE(offset); offset += 2;
                                             if (offset + length > data.length) break;
                                             const valText = data.toString('utf8', offset, offset + length).replace(/[^\x20-\x7E]/g, '');
+                                            console.log(`[DEBUG_V1000] VL IO ID: ${id}, Len: ${length}, Val: "${valText}"`);
                                             offset += length;
                                             ioData[id] = 1;
                                             if (valText.includes('Absence')) ioData[11705] = 1;
@@ -151,7 +193,7 @@ const server = net.createServer((socket) => {
                                     const internalBattery = ioData[67] || ioData[68];
                                     const gsmSignal = ioData[21];
 
-                                    console.log(`[DEBUG] ${imei} Vehicle Found, saving data...`);
+                                    console.log(`[DEBUG_V1000] ${imei} Vehicle Found, saving data...`);
 
                                     // NEW: Real Telemetry Parsing
                                     const odometer = (ioData[199] || ioData[16]) ? (Number(ioData[199] || ioData[16]) / 1000) : undefined; // Convert meters to km
@@ -159,24 +201,34 @@ const server = net.createServer((socket) => {
                                     const temperature = ioData[72] ? (Number(ioData[72]) / 10) : undefined; // Often sent in 0.1 units
                                     const fuelLevel = ioData[30]; // 0-100%
 
-                                    await prisma.locationHistory.create({
-                                        data: {
-                                            vehicleId: vehicle.id,
-                                            lat, lng, speed, timestamp: locationDate,
-                                            ignition,
-                                            internalBattery: internalBattery ? Number(internalBattery) : undefined,
-                                            gsmSignal: gsmSignal ? Math.min(Number(gsmSignal), 5) : undefined,
-                                            odometer,
-                                            engineHours,
-                                            temperature,
-                                            fuelLevel: fuelLevel ? Number(fuelLevel) : undefined
-                                        }
-                                    });
 
-                                    await prisma.vehicle.update({
-                                        where: { id: vehicle.id },
-                                        data: {
-                                            currentLocation: { lat, lng, timestamp: locationDate.toISOString() },
+                                    // Debug LocationHistory payload
+                                    const historyData = {
+                                        vehicleId: vehicle.id,
+                                        lat, lng, speed, timestamp: locationDate,
+                                        ignition,
+                                        internalBattery: internalBattery ? Number(internalBattery) : undefined,
+                                        gsmSignal: gsmSignal ? Math.min(Number(gsmSignal), 5) : undefined,
+                                        odometer,
+                                        engineHours,
+                                        temperature,
+                                        fuelLevel: fuelLevel ? Number(fuelLevel) : undefined
+                                    };
+                                    console.log(`[DEBUG_HIST] Creating history for ${imei} @ ${locationDate.toISOString()}`);
+
+                                    await prisma.locationHistory.create({
+                                        data: historyData
+                                    });
+                                    console.log(`[DEBUG_HIST] Success`);
+
+                                    // Check if this data is newer than what we have on the vehicle
+                                    // If vehicle has no lastLocationTime, or new date is newer, or same date but let's assume update
+                                    const isNewer = !vehicle.lastLocationTime || locationDate > vehicle.lastLocationTime;
+
+                                    if (isNewer) {
+                                        const updateData = {
+                                            lat,
+                                            lng,
                                             speed,
                                             status: ignition === false ? 'stopped' : speed > 5 ? 'moving' : 'idle',
                                             lastLocationTime: locationDate,
@@ -187,8 +239,22 @@ const server = net.createServer((socket) => {
                                             engineHours: engineHours || undefined,
                                             temperature: temperature || undefined,
                                             fuelLevel: fuelLevel ? Number(fuelLevel) : undefined
+                                        };
+
+                                        console.log(`[DEBUG_UPDATE] Updating ${imei} (Newer Data) | Data keys: ${Object.keys(updateData).join(',')}`);
+
+                                        try {
+                                            await prisma.vehicle.update({
+                                                where: { id: vehicle.id },
+                                                data: updateData
+                                            });
+                                            console.log(`[DEBUG_UPDATE] SUCCESS for ${imei}`);
+                                        } catch (updateErr) {
+                                            console.error(`[DEBUG_UPDATE] FAILED for ${imei}:`, updateErr);
                                         }
-                                    });
+                                    } else {
+                                        console.log(`[DEBUG_UPDATE] SKIPPING Update for ${imei} - Data (Feb 5/Old) is older than current Vehicle state.`);
+                                    }
 
                                     const eventMappings: Record<number, string> = {
                                         11700: 'DROWSINESS', 11701: 'DISTRACTION', 11702: 'YAWNING',
@@ -197,15 +263,29 @@ const server = net.createServer((socket) => {
 
                                     for (const [ioId, eventType] of Object.entries(eventMappings)) {
                                         if (ioData[parseInt(ioId)] === 1) {
-                                            await prisma.driverBehaviorEvent.create({
-                                                data: { vehicleId: vehicle.id, type: eventType, value: 1, timestamp: locationDate }
-                                            });
-                                            console.log(`[EVENT] ${eventType} saved`);
+                                            if (vehicle.driverId) {
+                                                try {
+                                                    await prisma.driverBehaviorEvent.create({
+                                                        data: {
+                                                            vehicleId: vehicle.id,
+                                                            driverId: vehicle.driverId,
+                                                            type: eventType,
+                                                            value: 1,
+                                                            timestamp: locationDate
+                                                        }
+                                                    });
+                                                    console.log(`[EVENT] ${eventType} saved for driver ${vehicle.driverId}`);
+                                                } catch (eventErr) {
+                                                    console.error(`[EVENT ERROR] Failed to save ${eventType}:`, eventErr);
+                                                }
+                                            } else {
+                                                console.warn(`[EVENT] ${eventType} detected but no driver assigned to vehicle ${vehicle.id}`);
+                                            }
                                         }
                                     }
                                 }
                             } catch (dbErr) {
-                                console.error(`[DB ERROR]`, dbErr.message);
+                                console.error(`[DB ERROR] Full Trace:`, dbErr);
                             }
                         }
 
@@ -221,41 +301,58 @@ const server = net.createServer((socket) => {
                         const payload = data.slice(15, 15 + commandLen);
 
                         if (type === 0x05 || type === 0x06) {
-                            const payloadHex = payload.toString('hex');
-                            if (payloadHex.includes('ffd8')) {
-                                const timestamp = Date.now();
-                                const filename = `snapshot_${imei}_${timestamp}.jpg`;
-                                const filepath = path.join(SNAPSHOT_DIR, filename);
+                            // Check for Text Events first
+                            const textPayload = payload.toString('utf8').replace(/[^\x20-\x7E]/g, '');
+                            const eventMappings: Record<string, string> = {
+                                'Absence': 'DRIVER_ABSENCE',
+                                'Drowsiness': 'DROWSINESS',
+                                'Distraction': 'DISTRACTION',
+                                'Yawning': 'YAWNING',
+                                'Smoking': 'SMOKING',
+                                'Phone': 'PHONE_USAGE'
+                            };
 
-                                const startIdx = payload.indexOf(Buffer.from([0xff, 0xd8]));
-                                if (startIdx !== -1) {
-                                    const imageData = payload.slice(startIdx);
-                                    fs.writeFileSync(filepath, imageData);
-                                    console.log(`[SNAPSHOT] Saved: ${filename}`);
+                            let eventFound = false;
+                            for (const [keyword, eventType] of Object.entries(eventMappings)) {
+                                if (textPayload.includes(keyword)) {
+                                    eventFound = true;
+                                    console.log(`[EVENT DETECTED from TEXT] ${eventType} found in "${textPayload}"`);
 
                                     try {
                                         const vehicle = await prisma.vehicle.findUnique({ where: { imei } });
-                                        if (vehicle) {
-                                            const recentEvent = await prisma.driverBehaviorEvent.findFirst({
-                                                where: {
+                                        if (vehicle && vehicle.driverId) {
+                                            await prisma.driverBehaviorEvent.create({
+                                                data: {
                                                     vehicleId: vehicle.id,
-                                                    type: { in: ['DROWSINESS', 'DISTRACTION', 'YAWNING', 'PHONE_USAGE', 'SMOKING', 'DRIVER_ABSENCE'] },
-                                                    timestamp: { gte: new Date(Date.now() - 60000) }
-                                                },
-                                                orderBy: { timestamp: 'desc' }
+                                                    driverId: vehicle.driverId,
+                                                    type: eventType,
+                                                    value: 1,
+                                                    timestamp: new Date() // Use current server time for text events as they lack GPS timestamp usually
+                                                }
                                             });
-                                            if (recentEvent) {
-                                                await prisma.driverBehaviorEvent.update({
-                                                    where: { id: recentEvent.id },
-                                                    data: { evidenceUrl: `/snapshots/${filename}` }
-                                                });
-                                                console.log(`[SNAPSHOT] Linked`);
-                                            }
+                                            console.log(`[EVENT SAVED] ${eventType} saved to DB.`);
+                                        } else {
+                                            console.warn(`[EVENT WARNING] Vehicle/Driver not found for event ${eventType}`);
                                         }
-                                    } catch (err) { }
+                                    } catch (dbErr) {
+                                        console.error(`[EVENT ERROR] Failed to save text event:`, dbErr);
+                                    }
+                                }
+                            }
+
+                            if (!eventFound) {
+                                // Save as snapshot only if NOT a known text event
+                                const filename = `${imei}_${Date.now()}_${type}.bin`;
+                                const filepath = path.join(SNAPSHOT_DIR, filename);
+                                try {
+                                    fs.writeFileSync(filepath, payload);
+                                    console.log(`[INFO] Codec 15 (Snapshot) received & SAVED: ${filename} (${payload.length} bytes)`);
+                                } catch (e) {
+                                    console.error(`[ERROR] Failed to save snapshot:`, e);
                                 }
                             }
                         }
+
 
                         if (socket.writable) {
                             const response = Buffer.alloc(4);

@@ -27,7 +27,7 @@ export default function FloatingPanel({
                 width,
                 minWidth: '320px',
                 maxWidth: '900px',
-                marginLeft: '12px' // Explicit gap from sidebar
+                marginLeft: '20px' // Increased gap from sidebar
             }}
         >
             {/* Header */}

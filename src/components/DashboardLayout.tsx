@@ -47,32 +47,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </div>
 
           {/* Floating Content Panels */}
-          <FloatingPanel
-            isOpen={activePanel === 'vehicles'}
-            onClose={() => setActivePanel(null)}
-            title="Vehicles"
-            width="28%"
-          >
-            <VehicleListPanel />
-          </FloatingPanel>
 
-          <FloatingPanel
-            isOpen={activePanel === 'analytics'}
-            onClose={() => setActivePanel(null)}
-            title="Fuel & Analytics"
-            width="50%"
-          >
-            <AnalyticsPanel />
-          </FloatingPanel>
 
-          <FloatingPanel
-            isOpen={activePanel === 'history'}
-            onClose={() => setActivePanel(null)}
-            title="Route Replay"
-            width="35%"
-          >
-            <HistoryPanel />
-          </FloatingPanel>
+
+
+
 
           <FloatingPanel
             isOpen={activePanel === 'settings'}
@@ -83,32 +62,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             <SettingsPanel />
           </FloatingPanel>
 
-          <FloatingPanel
-            isOpen={activePanel === 'drivers'}
-            onClose={() => setActivePanel(null)}
-            title="Driver Directory"
-            width="35%"
-          >
-            <DriversPanel />
-          </FloatingPanel>
 
-          <FloatingPanel
-            isOpen={activePanel === 'maintenance'}
-            onClose={() => setActivePanel(null)}
-            title="Maintenance Logs"
-            width="40%"
-          >
-            <MaintenancePanel />
-          </FloatingPanel>
 
-          <FloatingPanel
-            isOpen={activePanel === 'schedule'}
-            onClose={() => setActivePanel(null)}
-            title="Operational Schedule"
-            width="35%"
-          >
-            <SchedulePanel />
-          </FloatingPanel>
+
+
+
         </>
       )}
 

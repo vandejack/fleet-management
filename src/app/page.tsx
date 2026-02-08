@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useFleet } from '@/context/FleetContext';
 
 export default function Home() {
-  const { vehicles, alerts, dismissAlert, clearAllAlerts } = useFleet();
+  const { vehicles, alerts, dismissAlert, clearAllAlerts, replayState } = useFleet();
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
@@ -22,6 +22,25 @@ export default function Home() {
   }, [vehicles, selectedVehicle]);
 
   const activeVehicles = vehicles.filter(v => v.status === 'moving').length;
+
+  // Prepare map data based on replay state
+  const displayedVehicles = replayState.isActive && replayState.vehicleId && replayState.route.length > 0 && replayState.currentIndex < replayState.route.length
+    ? [
+      {
+        ...vehicles.find(v => v.id === replayState.vehicleId)!,
+        currentLocation: {
+          lat: replayState.route[replayState.currentIndex].lat,
+          lng: replayState.route[replayState.currentIndex].lng,
+          timestamp: replayState.route[replayState.currentIndex].timestamp
+        },
+        speed: replayState.route[replayState.currentIndex].speed,
+        status: 'moving' as const // Force moving status for visual
+      }
+    ]
+    : vehicles;
+
+  // If replaying, pass the route to visualization
+  const displayedRoute = replayState.isActive ? replayState.route : [];
 
   return (
     <DashboardLayout>
@@ -60,7 +79,11 @@ export default function Home() {
       </div>
 
       <div className="h-full w-full">
-        <Map vehicles={vehicles} onVehicleSelect={setSelectedVehicle} />
+        <Map
+          vehicles={displayedVehicles}
+          route={displayedRoute}
+          onVehicleSelect={setSelectedVehicle}
+        />
       </div>
 
       <AlertsList alerts={alerts} vehicles={vehicles} onDismiss={dismissAlert} onClearAll={clearAllAlerts} />

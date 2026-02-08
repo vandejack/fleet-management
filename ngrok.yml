@@ -1,0 +1,6 @@
+version: "2"
+tunnels:
+  fleet-tcp:
+    proto: tcp
+    addr: 7001
+    hostname: 1.tcp.ap.ngrok.io:23907
