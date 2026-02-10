@@ -63,15 +63,16 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
         {/* Backdrop for mobile */}
         {vehicle && (
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2999] md:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[4999] md:hidden"
             onClick={onClose}
           />
         )}
 
         <div className={`fixed inset-x-0 bottom-0 md:inset-x-auto md:right-4 md:top-4 md:bottom-auto md:h-[calc(100vh-32px)] md:w-96 
             transition-transform duration-300 ease-in-out print:hidden 
-            bg-slate-900/95 backdrop-blur-xl md:rounded-2xl rounded-t-2xl shadow-2xl z-[4000] 
+            bg-slate-900/95 backdrop-blur-xl md:rounded-2xl rounded-t-2xl shadow-2xl z-[5000] 
             overflow-y-auto border-t md:border border-white/10 
+            pb-safe
             ${vehicle ? 'translate-y-0 md:translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-[120%]'}`}
           style={{ maxHeight: '85vh' }}
         >
@@ -205,7 +206,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                 </details>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-4 pb-12">
+              <div className="grid grid-cols-2 gap-3 pt-4 pb-32">
                 <button
                   onClick={() => window.location.href = `/replay?vehicleId=${vehicle?.id}`}
                   className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all"
