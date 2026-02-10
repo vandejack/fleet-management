@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Fuel, DollarSign, TrendingUp, MapPin, Calendar, Truck, Plus, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export default function AnalyticsPage() {
   const { vehicles, fuelTransactions, addFuelTransaction } = useFleet();
@@ -16,6 +16,11 @@ export default function AnalyticsPage() {
     location: '',
     odometer: ''
   });
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Generate analytics data based on actual fleet size
   const analyticsData = useMemo(() => {
@@ -173,43 +178,55 @@ export default function AnalyticsPage() {
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">Daily Consumption Trend</h3>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analyticsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(value) => value.slice(5)}
-                    stroke="#64748b"
-                    className="dark:text-slate-400"
-                  />
-                  <YAxis stroke="#64748b" className="dark:text-slate-400" />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="consumption" fill="#f97316" name="Consumption (L)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analyticsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(value) => value.slice(5)}
+                      stroke="#64748b"
+                      className="dark:text-slate-400"
+                    />
+                    <YAxis stroke="#64748b" className="dark:text-slate-400" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="consumption" fill="#f97316" name="Consumption (L)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
+                  Initializing Chart...
+                </div>
+              )}
             </div>
           </div>
 
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">Cost vs Efficiency</h3>
             <div className="h-[300px] w-full min-h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analyticsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(value) => value.slice(5)}
-                    stroke="#64748b"
-                  />
-                  <YAxis yAxisId="left" stroke="#64748b" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="cost" stroke="#16a34a" name="Cost (Rp)" strokeWidth={2} />
-                  <Line yAxisId="right" type="monotone" dataKey="efficiency" stroke="#2563eb" name="Efficiency (km/L)" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analyticsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(value) => value.slice(5)}
+                      stroke="#64748b"
+                    />
+                    <YAxis yAxisId="left" stroke="#64748b" />
+                    <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" dataKey="cost" stroke="#16a34a" name="Cost (Rp)" strokeWidth={2} />
+                    <Line yAxisId="right" type="monotone" dataKey="efficiency" stroke="#2563eb" name="Efficiency (km/L)" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
+                  Initializing Chart...
+                </div>
+              )}
             </div>
           </div>
         </div>
