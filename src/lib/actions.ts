@@ -373,13 +373,15 @@ export async function getVehicleHistory(vehicleId: string, start?: string, end?:
         // Map to format expected by UI (lat, lng, timestamp string)
         // Also handling Prisma weirdness if generated types are old, but TS check passed with any?
         // Let's assume types are OK or rely on JS flexibility.
-        const route = history.map(h => ({
-            lat: h.lat,
-            lng: h.lng,
-            timestamp: h.timestamp.toISOString(),
-            speed: h.speed,
-            ignition: h.ignition
-        }));
+        const route = history
+            .filter(h => h.lat !== 0 || h.lng !== 0)
+            .map(h => ({
+                lat: h.lat,
+                lng: h.lng,
+                timestamp: h.timestamp.toISOString(),
+                speed: h.speed,
+                ignition: h.ignition
+            }));
 
         return { success: true, route };
     } catch (error) {

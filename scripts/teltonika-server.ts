@@ -184,11 +184,7 @@ const server = net.createServer((socket) => {
 
                             try {
                                 const vehicle = await prisma.vehicle.findUnique({ where: { imei } });
-                                if (vehicle) {
-                                    await prisma.locationHistory.create({
-                                        data: { vehicleId: vehicle.id, lat, lng, speed, timestamp: locationDate }
-                                    });
-
+                                if (vehicle && (lat !== 0 || lng !== 0)) {
                                     const ignition = ioData[239] !== undefined ? ioData[239] === 1 : undefined;
                                     const internalBattery = ioData[67] || ioData[68];
                                     const gsmSignal = ioData[21];
