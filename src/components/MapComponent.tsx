@@ -176,7 +176,7 @@ const ZoomSlider = () => {
   };
 
   return (
-    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[800] flex items-center gap-4 bg-slate-900/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl transition-all hover:bg-slate-900/80 group">
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[800] hidden md:flex items-center gap-4 bg-slate-900/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl transition-all hover:bg-slate-900/80 group">
       <span className="text-white/40 group-hover:text-white/60 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>
       </span>
