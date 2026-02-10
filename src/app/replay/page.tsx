@@ -130,7 +130,7 @@ function ReplayContent() {
 
         {/* Floating Status Overlay */}
         {currentIndex > 0 && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 dark:border-white/10 shadow-xl">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 dark:border-white/10 shadow-xl">
             <div className="flex flex-col border-r border-slate-200 dark:border-slate-700 pr-4">
               <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Speed</span>
               <span className="text-lg font-black text-blue-600 dark:text-blue-400 leading-none">
