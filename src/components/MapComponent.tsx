@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
 
 // Custom vehicle icon - Apple Maps style circle (minimal)
-const getVehicleIcon = (status: string) => {
+const getVehicleIcon = (status: string, driverName?: string) => {
   // Colors for different statuses (Apple style)
   const color = status === 'moving'
     ? '#34C759' // Apple green (Moving)
@@ -17,19 +17,26 @@ const getVehicleIcon = (status: string) => {
   return L.divIcon({
     className: 'custom-vehicle-icon',
     html: `
-      <div style="width: 26px; height: 26px; position: relative; display: flex; align-items: center; justify-content: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));">
-          <!-- Outer white border ring -->
-          <circle cx="13" cy="13" r="13" fill="white"/>
-          
-          <!-- Main colored circle -->
-          <circle cx="13" cy="13" r="10" fill="${color}"/>
-        </svg>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+        ${driverName ? `
+          <div style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; white-space: nowrap;">
+            <span style="color: white; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">${driverName}</span>
+          </div>
+        ` : ''}
+        <div style="width: 26px; height: 26px; position: relative; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));">
+            <!-- Outer white border ring -->
+            <circle cx="13" cy="13" r="13" fill="white"/>
+            
+            <!-- Main colored circle -->
+            <circle cx="13" cy="13" r="10" fill="${color}"/>
+          </svg>
+        </div>
       </div>
     `,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    popupAnchor: [0, -13]
+    iconSize: [26, driverName ? 54 : 26],
+    iconAnchor: [13, driverName ? 41 : 13],
+    popupAnchor: [0, driverName ? -41 : -13]
   });
 };
 
@@ -102,7 +109,7 @@ const SmoothVehicleMarker = ({ vehicle, onSelect }: { vehicle: Vehicle, onSelect
     <Marker
       ref={markerRef}
       position={initialPos}
-      icon={getVehicleIcon(vehicle.status)}
+      icon={getVehicleIcon(vehicle.status, vehicle.driver?.name)}
       eventHandlers={{
         click: () => onSelect?.(vehicle),
       }}

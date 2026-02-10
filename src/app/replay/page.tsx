@@ -127,6 +127,27 @@ function ReplayContent() {
           route={currentRoute}
           center={[currentPoint.lat, currentPoint.lng]}
         />
+
+        {/* Floating Status Overlay */}
+        {currentIndex > 0 && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 dark:border-white/10 shadow-xl">
+            <div className="flex flex-col border-r border-slate-200 dark:border-slate-700 pr-4">
+              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Speed</span>
+              <span className="text-lg font-black text-blue-600 dark:text-blue-400 leading-none">
+                {Math.round(currentPoint.speed || 0)} <span className="text-[10px] font-normal text-slate-400">km/h</span>
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Time Update</span>
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none">
+                {currentPoint.timestamp ? new Date(currentPoint.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
+              </span>
+              <span className="text-[9px] text-slate-400">
+                {currentPoint.timestamp ? new Date(currentPoint.timestamp).toLocaleDateString([], { day: '2-digit', month: 'short' }) : ''}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 z-[1000] w-full md:max-w-2xl md:px-4 pointer-events-none">
