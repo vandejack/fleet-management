@@ -18,6 +18,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AiCrone Fleet Management",
   description: "Advanced fleet management system",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
 };
 
 import { getVehicles, getDrivers, getMaintenance } from "@/lib/data";

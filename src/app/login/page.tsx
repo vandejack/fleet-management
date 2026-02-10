@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-slate-50 dark:bg-slate-900 transition-colors">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center p-0 relative bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
       <div className="absolute top-4 right-4 z-50">
         <ThemeToggle minimal={true} />
       </div>
@@ -31,9 +31,7 @@ export default function LoginPage() {
       {/* Dot Matrix Overlay */}
       <div className="absolute inset-0 z-[2] pointer-events-none" style={{
         backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px)',
-        backgroundSize: '4px 4px',
-        maskImage: 'linear-gradient(to bottom, black, transparent)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black, transparent)'
+        backgroundSize: '4px 4px'
       }}></div>
 
       <div className="w-full max-w-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-slate-700 relative z-10 transition-colors">
