@@ -147,7 +147,15 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
     if (savedSettings) {
       try {
-        setSettings(JSON.parse(savedSettings));
+        const parsed = JSON.parse(savedSettings);
+        // Deep merge top-level objects to ensure new properties like simulation are present if missing in old data
+        setSettings(prev => ({
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          simulation: { ...DEFAULT_SETTINGS.simulation, ...(parsed.simulation || {}) },
+          display: { ...DEFAULT_SETTINGS.display, ...(parsed.display || {}) },
+          notifications: { ...DEFAULT_SETTINGS.notifications, ...(parsed.notifications || {}) }
+        }));
       } catch (e) { console.error("Failed to parse savedSettings", e); }
     }
 
@@ -223,7 +231,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
   // Simulation Logic
   useEffect(() => {
-    if (!settings.simulation.autoPlay) return;
+    if (!settings.simulation?.autoPlay) return;
 
     const interval = setInterval(() => {
       setVehicles(prev => prev.map(v => {
@@ -248,7 +256,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     }, settings.simulation.updateInterval);
 
     return () => clearInterval(interval);
-  }, [settings.simulation.autoPlay, settings.simulation.speed, settings.simulation.updateInterval]);
+  }, [settings.simulation?.autoPlay, settings.simulation?.speed, settings.simulation?.updateInterval]);
 
   // Alert Monitoring Logic
   useEffect(() => {
