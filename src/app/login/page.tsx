@@ -75,8 +75,7 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   name="email"
-                  placeholder="admin@aicrone.com"
-                  defaultValue="admin@aicrone.com"
+                  placeholder="name@company.com"
                   required
                 />
               </div>
@@ -96,7 +95,6 @@ export default function LoginPage() {
                   type="password"
                   name="password"
                   placeholder="••••••••"
-                  defaultValue="password"
                   required
                   minLength={6}
                 />
