@@ -62,15 +62,13 @@ export default function SettingsPanel() {
             {/* Theme Switcher for Admins */}
             <ThemeSwitcher />
 
-            <div className="pt-4 mt-2">
-                <button
-                    onClick={() => signOut()}
-                    className="w-full flex items-center justify-center gap-3 p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-500 font-bold text-sm transition-all"
-                >
-                    <LogOut size={18} />
-                    Log Out Assistant
-                </button>
-            </div>
+            <button
+                onClick={() => signOut()}
+                className="w-full flex items-center justify-center gap-3 p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-500 font-bold text-sm transition-all"
+            >
+                <LogOut size={18} />
+                Sign Out
+            </button>
         </div>
     );
 }

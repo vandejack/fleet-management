@@ -1,7 +1,8 @@
 'use client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
-import { Bell, Globe, Save } from 'lucide-react';
+import { Bell, Globe, Save, Shield, LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
@@ -138,6 +139,7 @@ export default function SettingsPage() {
 
           {/* Display Settings */}
           <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            {/* ... existing display settings ... */}
             <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400">
                 <Globe size={24} />
@@ -205,6 +207,34 @@ export default function SettingsPage() {
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                 </label>
+              </div>
+            </div>
+          </section>
+
+          {/* Account & Security Section */}
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Account & Security</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Manage your account access and security</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Session Control</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Sign out of your account on this device</p>
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-red-600 font-bold text-sm transition-all"
+                >
+                  <LogOut size={18} />
+                  Sign Out
+                </button>
               </div>
             </div>
           </section>
