@@ -1,0 +1,6 @@
+× Copying web assets from public to android\app\src\main\assets\public - failed!
+× copy android - failed!
+[error] Error: EPERM: operation not permitted, rmdir 'C:\Users\Administrator\OneDrive\Documents\40_Archives\Project\fleet-management\android\app\src\main\assets\public\snapshots'
+√ Updating Android plugins in 10.73ms
+× update android - failed!
+[error] Error: EPERM: operation not permitted, rmdir 'C:\Users\Administrator\OneDrive\Documents\40_Archives\Project\fleet-management\android\capacitor-cordova-android-plugins\build\outputs\logs'

@@ -3,7 +3,7 @@
 $ServerIP = "192.168.1.101"
 $User = "aicrone"
 $RepoUrl = "https://github.com/vandejack/fleet-management.git"
-$AppDir = "/home/aicrone/fleet-management"
+$AppDir = "/home/aicrone/projects/aicrone-app"
 $Branch = "main"
 
 # Only used if you want to hardcode (NOT RECOMMENDED for security, better to key typing it)
@@ -23,11 +23,18 @@ if ! command -v node &> /dev/null; then
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
     export NVM_DIR="`$HOME/.nvm"
     [ -s "`$NVM_DIR/nvm.sh" ] && \. "`$NVM_DIR/nvm.sh"
-    nvm install 18
-    nvm use 18
-    nvm alias default 18
+    nvm install 20
+    nvm use 20
+    nvm alias default 20
 else
     echo "✅ Node.js is already installed: $(node -v)"
+    # Check version and upgrade if needed (simple check)
+    if [[ $(node -v) == v18* ]]; then
+        echo "⚠️  Upgrading Node.js 18 to 20..."
+        nvm install 20
+        nvm use 20
+        nvm alias default 20
+    fi
 fi
 
 # 2. Install PM2 if missing

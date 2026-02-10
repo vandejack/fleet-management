@@ -293,8 +293,14 @@ export async function updateMaintenance(id: string, data: any) {
 export async function getVehicles() {
     const session = await auth();
     try {
+        console.log('[getVehicles] Start');
         const user = session?.user as any;
-        const where = user?.role === 'superadmin' ? {} : { companyId: user?.companyId };
+        if (!user) {
+            console.log('[getVehicles] No user session');
+            return { success: false, error: 'Unauthorized' };
+        }
+        console.log('[getVehicles] User:', user.email);
+        const where = user.role === 'superadmin' ? {} : { companyId: user.companyId };
 
         const vehicles = await prisma.vehicle.findMany({
             where, // Apply the filter!

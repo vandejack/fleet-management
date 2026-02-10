@@ -80,5 +80,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     }
   },
-  secret: 'super-secret-random-string-that-should-be-in-env-file',
+  secret: process.env.NEXTAUTH_SECRET,
 });
