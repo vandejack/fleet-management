@@ -9,17 +9,11 @@ import { useState, useEffect } from 'react';
 import { useFleet } from '@/context/FleetContext';
 
 export default function Home() {
-  const { vehicles, alerts, dismissAlert, clearAllAlerts, replayState } = useFleet();
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const { vehicles, alerts, dismissAlert, clearAllAlerts, replayState, selectedVehicle, setSelectedVehicle } = useFleet();
 
-  useEffect(() => {
-    if (selectedVehicle) {
-      const updatedVehicle = vehicles.find(v => v.id === selectedVehicle.id);
-      if (updatedVehicle) {
-        setSelectedVehicle(updatedVehicle);
-      }
-    }
-  }, [vehicles, selectedVehicle]);
+
+  // State sync is now handled in FleetContext
+
 
   const activeVehicles = vehicles.filter(v => v.status === 'moving').length;
 
@@ -87,7 +81,6 @@ export default function Home() {
       </div>
 
       <AlertsList alerts={alerts} vehicles={vehicles} onDismiss={dismissAlert} onClearAll={clearAllAlerts} />
-      <VehicleDetailPanel vehicle={selectedVehicle} onClose={() => setSelectedVehicle(null)} />
     </DashboardLayout>
   );
 }

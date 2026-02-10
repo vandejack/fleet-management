@@ -58,6 +58,8 @@ interface FleetContextType {
   settings: Settings;
   maintenance: MaintenanceRecord[];
   fuelTransactions: FuelTransaction[];
+  selectedVehicle: Vehicle | null;
+  setSelectedVehicle: (vehicle: Vehicle | null) => void;
   assignDriver: (driverId: string, vehicleId: string) => void;
   unassignDriver: (driverId: string) => void;
   dismissAlert: (id: string) => void;
@@ -90,6 +92,7 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>(initialMaintenance || []);
   const [fuelTransactions, setFuelTransactions] = useState<FuelTransaction[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [isInitialized, setIsInitialized] = useState(false);
   const lastAlertTimeRef = useRef<Record<string, number>>({});
@@ -202,6 +205,16 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
 
     return () => clearInterval(interval);
   }, []);
+
+  // Update selected vehicle when vehicles array changes
+  useEffect(() => {
+    if (selectedVehicle) {
+      const updated = vehicles.find(v => v.id === selectedVehicle.id);
+      if (updated) {
+        setSelectedVehicle(updated);
+      }
+    }
+  }, [vehicles]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -542,6 +555,8 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       addMaintenance,
       updateMaintenance,
       addFuelTransaction,
+      selectedVehicle,
+      setSelectedVehicle,
       startReplay,
       stopReplay,
       toggleReplay

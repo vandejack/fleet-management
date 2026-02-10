@@ -15,6 +15,7 @@ import SettingsPanel from './panels/SettingsPanel';
 import DriversPanel from './panels/DriversPanel';
 import MaintenancePanel from './panels/MaintenancePanel';
 import SchedulePanel from './panels/SchedulePanel';
+import { VehicleDetailPanel } from './VehicleDetailPanel';
 
 type PanelType = 'vehicles' | 'analytics' | 'history' | 'settings' | 'drivers' | 'maintenance' | 'schedule' | 'routes' | null;
 
@@ -22,7 +23,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<PanelType>(null);
   const [isScrolled, setIsScrolled] = useState(false); // New state for scroll detection
-  const { settings } = useFleet();
+  const { settings, selectedVehicle, setSelectedVehicle } = useFleet();
   const pathname = usePathname();
   const isMapPage = pathname === '/' || pathname === '/replay';
   const isMobile = useMobile();
@@ -151,6 +152,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
       {/* Mobile Bottom Nav */}
       {isMobile && <BottomNav />}
+
+      {/* Global Vehicle Detail Panel */}
+      <VehicleDetailPanel
+        vehicle={selectedVehicle}
+        onClose={() => setSelectedVehicle(null)}
+      />
     </div>
   );
 };
