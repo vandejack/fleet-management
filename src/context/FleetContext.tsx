@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { getSystemSettings, updateSystemSetting } from '@/lib/actions/settings';
 import { Vehicle, Driver, Alert, MOCK_VEHICLES, MOCK_DRIVERS, MaintenanceRecord, MOCK_MAINTENANCE, FuelTransaction, MOCK_FUEL_TRANSACTIONS } from '@/utils/mockData';
 
 interface Settings {
@@ -19,6 +20,7 @@ interface Settings {
     showWeather: boolean;
     units: 'metric' | 'imperial';
   };
+  themeMode: 'classic' | 'modern';
 }
 
 // Server Actions
@@ -45,7 +47,8 @@ const DEFAULT_SETTINGS: Settings = {
     showTraffic: true,
     showWeather: false,
     units: 'metric'
-  }
+  },
+  themeMode: 'modern'
 };
 
 interface FleetContextType {
@@ -323,8 +326,61 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     setAlerts([]);
   };
 
-  const updateSettings = (newSettings: Settings) => {
+  // Load settings from localStorage and Database
+  useEffect(() => {
+    const loadSettings = async () => {
+      // 1. Load Local
+      const savedSettings = localStorage.getItem('fleet_settings');
+      let currentSettings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
+
+      // 2. Load Global
+      try {
+        const globalSettings = await getSystemSettings();
+        if (globalSettings.themeMode) {
+          currentSettings = { ...currentSettings, themeMode: globalSettings.themeMode };
+        }
+      } catch (error) {
+        console.error('Failed to load global settings:', error);
+      }
+
+      setSettings(currentSettings);
+      setIsInitialized(true);
+    };
+
+    loadSettings();
+
+    // Poll for global updates (Simple sync for now)
+    const interval = setInterval(async () => {
+      try {
+        const globalSettings = await getSystemSettings();
+        if (globalSettings.themeMode) {
+          setSettings(prev => {
+            if (prev.themeMode !== globalSettings.themeMode) {
+              return { ...prev, themeMode: globalSettings.themeMode as 'classic' | 'modern' };
+            }
+            return prev;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const updateSettings = async (newSettings: Settings) => {
     setSettings(newSettings);
+    localStorage.setItem('fleet_settings', JSON.stringify(newSettings));
+
+    // If theme changed, update global setting
+    if (newSettings.themeMode !== settings.themeMode) {
+      try {
+        await updateSystemSetting('themeMode', newSettings.themeMode);
+      } catch (e) {
+        console.error('Failed to update global theme:', e);
+      }
+    }
   };
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => {

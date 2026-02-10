@@ -41,9 +41,10 @@ fi
 
 # 3. Setup Directory & Code
 if [ -d "$AppDir" ]; then
-    echo "🔄 Updating existing repository..."
+    echo "🔄 Updating existing repository (FORCING SYNC)..."
     cd $AppDir
-    git pull origin $Branch
+    git fetch origin
+    git reset --hard origin/$Branch
 else
     echo "📂 Cloning repository..."
     git clone $RepoUrl $AppDir

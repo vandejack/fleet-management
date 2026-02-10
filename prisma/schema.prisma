@@ -166,3 +166,9 @@ model DriverBehaviorEvent {
   evidenceUrl String?
   timestamp DateTime @default(now())
 }
+
+model SystemSettings {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

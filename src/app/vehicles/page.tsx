@@ -81,15 +81,28 @@ export default function VehiclesPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-8 h-full overflow-y-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Vehicle Management</h1>
-            <p className="text-slate-500 mt-1">Monitor and manage your fleet vehicles</p>
+      <div className="p-4 md:p-8 pt-16 md:pt-8 pb-24 md:pb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Vehicle Management</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Monitor and manage your fleet vehicles</p>
           </div>
+
+          {/* Desktop Add Button */}
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+            className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+          >
+            <Plus size={20} />
+            Add New Vehicle
+          </button>
+        </div>
+
+        {/* Mobile Floating Add Button */}
+        <div className="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-[900]">
+          <button
+            onClick={openAddModal}
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
           >
             <Plus size={20} />
             Add New Vehicle
@@ -235,7 +248,7 @@ export default function VehiclesPage() {
                     <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-500 ${vehicle.fuelLevel > 70 ? 'bg-green-500' :
-                            vehicle.fuelLevel > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                          vehicle.fuelLevel > 30 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
                         style={{ width: `${vehicle.fuelLevel}%` }}
                       ></div>

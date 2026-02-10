@@ -4,6 +4,7 @@ import { X, User, Phone, Truck, Calendar, Wrench, Battery, Signal, Gauge, Clock,
 import { getVehicleBehaviorEvents } from '@/lib/actions';
 import { useState, useEffect } from 'react';
 import { BehaviorEvent } from '@/utils/mockData';
+import { useFleet } from '@/context/FleetContext'; // Added useFleet
 
 interface VehicleDetailPanelProps {
   vehicle: Vehicle | null;
@@ -53,6 +54,225 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
     return type.replace('_', ' ');
   };
 
+  const { settings } = useFleet(); // Get settings for theme
+
+  // Modern Theme (Bottom Sheet on Mobile, Slide from right on Desktop)
+  if (settings.themeMode === 'modern') {
+    return (
+      <>
+        {/* Backdrop for mobile */}
+        {vehicle && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2999] md:hidden"
+            onClick={onClose}
+          />
+        )}
+
+        <div className={`fixed inset-x-0 bottom-0 md:inset-x-auto md:right-4 md:top-4 md:bottom-auto md:h-[calc(100vh-32px)] md:w-96 
+            transition-transform duration-300 ease-in-out print:hidden 
+            bg-slate-900/95 backdrop-blur-xl md:rounded-2xl rounded-t-2xl shadow-2xl z-[3000] 
+            overflow-y-auto border-t md:border border-white/10 
+            ${vehicle ? 'translate-y-0 md:translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-[120%]'}`}
+          style={{ maxHeight: '85vh' }}
+        >
+          <div className="p-0">
+            {/* Drag Handle for Mobile */}
+            <div className="w-full flex justify-center pt-3 pb-1 md:hidden">
+              <div className="w-12 h-1.5 bg-slate-700/50 rounded-full" />
+            </div>
+
+            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl z-10 px-6 py-4 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  {vehicle?.plate}
+                  <span className={`w-2 h-2 rounded-full ${vehicle?.status === 'moving' ? 'bg-green-500 box-shadow-glow-green' : vehicle?.status === 'idle' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                </h2>
+                <p className="text-xs text-slate-400">{vehicle?.name}</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Primary Stats Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-400 mb-1">Speed</span>
+                  <span className="text-lg font-bold text-white font-mono">{Math.round(vehicle?.speed || 0)}</span>
+                  <span className="text-[10px] text-slate-500">km/h</span>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-400 mb-1">Fuel</span>
+                  <span className={`text-lg font-bold font-mono ${vehicle?.fuelLevel && vehicle.fuelLevel < 20 ? 'text-red-400' : 'text-white'}`}>
+                    {Math.round(vehicle?.fuelLevel || 0)}
+                  </span>
+                  <span className="text-[10px] text-slate-500">%</span>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-400 mb-1">Ignition</span>
+                  <div className={`mt-1 w-8 h-4 rounded-full flex items-center px-1 ${vehicle?.ignition ? 'bg-green-500/20 justify-end' : 'bg-slate-700 justify-start'}`}>
+                    <div className={`w-3 h-3 rounded-full ${vehicle?.ignition ? 'bg-green-500' : 'bg-slate-400'}`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Driver & Location */}
+              <div className="bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
+                <div className="p-3 border-b border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-400 font-bold text-xs">
+                      {vehicle?.driver?.name.charAt(0)}
+                    </div>
+                    <div className="text-sm text-slate-300">
+                      {vehicle?.driver?.name || 'Unassigned'}
+                    </div>
+                  </div>
+                  <a href={`tel:${vehicle?.driver?.phone}`} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors">
+                    <Phone size={16} />
+                  </a>
+                </div>
+                <div className="p-3 bg-black/20">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Last Update</p>
+                  <p className="text-xs text-slate-300 font-mono">
+                    {vehicle?.lastLocationTime ? new Date(vehicle.lastLocationTime).toLocaleString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Collapsible Sections or just list for now in modern view */}
+              <div className="space-y-1">
+                <details className="group bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors">
+                    <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                      <Gauge size={16} className="text-cyan-400" /> Telemetry Details
+                    </span>
+                    <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
+                  </summary>
+                  <div className="p-3 pt-0 border-t border-white/5 bg-black/10 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded bg-white/5 flex justify-between">
+                      <span className="text-slate-500">Odometer</span>
+                      <span className="text-slate-300 font-mono">{vehicle?.odometer?.toFixed(0)} km</span>
+                    </div>
+                    <div className="p-2 rounded bg-white/5 flex justify-between">
+                      <span className="text-slate-500">Eng. Hours</span>
+                      <span className="text-slate-300 font-mono">{vehicle?.engineHours?.toFixed(1)} h</span>
+                    </div>
+                    <div className="p-2 rounded bg-white/5 flex justify-between">
+                      <span className="text-slate-500">Ext. Batt</span>
+                      <span className="text-slate-300 font-mono">{(vehicle?.vehicleBattery || 0) / 1000} V</span>
+                    </div>
+                    <div className="p-2 rounded bg-white/5 flex justify-between">
+                      <span className="text-slate-500">Int. Batt</span>
+                      <span className="text-slate-300 font-mono">{(vehicle?.internalBattery || 0) / 1000} V</span>
+                    </div>
+                  </div>
+                </details>
+
+                <details className="group bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors">
+                    <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                      <EyeOff size={16} className="text-orange-400" /> Fatigue Events
+                    </span>
+                    <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
+                  </summary>
+                  <div className="max-h-48 overflow-y-auto p-0">
+                    {loading && behaviorEvents.length === 0 ? (
+                      <div className="p-4 text-center text-slate-500 text-xs italic">Loading...</div>
+                    ) : behaviorEvents.length > 0 ? (
+                      <div className="divide-y divide-white/5">
+                        {behaviorEvents.map((event) => (
+                          <div
+                            key={event.id}
+                            className="p-3 hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-between"
+                            onClick={() => event.evidenceUrl && setSelectedEvent(event)}
+                          >
+                            <div className="flex items-center gap-2">
+                              {getEventIcon(event.type)}
+                              <div>
+                                <p className="text-xs text-slate-300 font-medium">{getEventLabel(event.type)}</p>
+                                <p className="text-[10px] text-slate-500">{new Date(event.timestamp).toLocaleTimeString()}</p>
+                              </div>
+                            </div>
+                            {event.evidenceUrl && <div className="text-[9px] bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">IMG</div>}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-slate-500 text-xs">No recent events</div>
+                    )}
+                  </div>
+                </details>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-4">
+                <button
+                  onClick={() => window.location.href = `/replay?vehicleId=${vehicle?.id}`}
+                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all"
+                >
+                  View History
+                </button>
+                <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl py-3 text-sm font-medium border border-white/10 transition-all">
+                  More Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Snapshot Modal Overlay (Reused) */}
+        {selectedEvent && selectedEvent.evidenceUrl && (
+          <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="relative max-w-2xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50 text-white">
+                <div className="flex items-center gap-3">
+                  {getEventIcon(selectedEvent.type)}
+                  <div>
+                    <h3 className="font-bold text-sm">Fatigue Snapshot</h3>
+                    <p className="text-[10px] text-slate-400">
+                      {getEventLabel(selectedEvent.type)} • {new Date(selectedEvent.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="relative aspect-video bg-black flex items-center justify-center">
+                <img
+                  src={selectedEvent.evidenceUrl}
+                  alt="Fatigue Evidence"
+                  className="max-w-full max-h-full object-contain"
+                />
+                <div className="absolute inset-0 pointer-events-none border-[1px] border-red-500/30 m-4 flex flex-col justify-between p-4">
+                  <div className="flex justify-between text-[10px] text-red-500 font-mono">
+                    <span>MOVON DSM ACTIVE</span>
+                    <span>{vehicle?.plate}</span>
+                  </div>
+                  <div className="text-[10px] text-red-500 font-mono self-end">
+                    {selectedEvent ? new Date(selectedEvent.timestamp).toISOString() : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-800/30 flex justify-end gap-3">
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="px-4 py-2 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors"
+                >
+                  Close View
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Classic Theme (Original Return)
   return (
     <div className={`fixed right-4 top-4 h-[calc(100vh-32px)] w-96 transition-transform duration-300 ease-in-out print:hidden bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg z-[3000] overflow-y-auto border border-white/10 ${vehicle ? 'translate-x-0' : 'translate-x-[120%]'}`}>
       <div className="p-6">

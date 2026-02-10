@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useFleet } from '@/context/FleetContext';
 
 export default function VehicleListPanel() {
-    const { vehicles } = useFleet();
+    const { vehicles, settings } = useFleet();
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -16,6 +16,59 @@ export default function VehicleListPanel() {
         }
     };
 
+    // Modern Compact Theme
+    if (settings.themeMode === 'modern') {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-2 pb-2 border-b border-white/5">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fleet Overview</p>
+                    <span className="text-xs font-mono bg-white/5 px-2 py-0.5 rounded text-slate-300">{vehicles.length}</span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
+                    {vehicles.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500 text-sm italic">
+                            No vehicles found
+                        </div>
+                    ) : (
+                        vehicles.map((v) => (
+                            <div key={v.id} className="bg-slate-800/40 border border-slate-700/30 rounded-lg p-2.5 hover:bg-slate-700/40 transition-all cursor-pointer group flex items-center gap-3">
+                                <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(v.status)}`} />
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-slate-200 text-[13px] font-semibold truncate tracking-tight">{v.plate}</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-mono text-slate-400 bg-black/20 px-1.5 rounded">{Math.round(v.speed)} km/h</span>
+                                            <span className={`text-[10px] ${v.fuelLevel < 20 ? 'text-red-400' : 'text-slate-500'}`}>{Math.round(v.fuelLevel)}%</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-0.5">
+                                        <p className="text-slate-500 text-[11px] truncate flex items-center gap-1">
+                                            <span className="w-1 h-1 rounded-full bg-slate-600"></span>
+                                            {v.name}
+                                        </p>
+                                        <p className="text-[10px] text-slate-600 truncate max-w-[80px]">
+                                            {v.driver?.name || 'No Driver'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                <Link
+                    href="/vehicles"
+                    className="block w-full py-2 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 hover:from-cyan-600/20 hover:to-blue-600/20 border border-cyan-500/20 hover:border-cyan-500/40 rounded-lg text-center text-xs text-cyan-400 font-medium transition-all"
+                >
+                    Full Fleet Management
+                </Link>
+            </div>
+        );
+    }
+
+    // Classic Theme
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between px-1">

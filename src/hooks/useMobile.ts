@@ -5,14 +5,16 @@ export function useMobile() {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        // Check if running on native platform (Android/iOS)
-        setIsMobile(Capacitor.isNativePlatform());
+        // Check if running on native platform (Android/iOS) or small screen
+        const checkMobile = () => {
+            const isNative = Capacitor.isNativePlatform();
+            const isSmallScreen = window.innerWidth < 768;
+            setIsMobile(isNative || isSmallScreen);
+        };
 
-        // Optional: Also check screen width for responsive web behavior if desired
-        // const checkWidth = () => setIsMobile(window.innerWidth < 768 || Capacitor.isNativePlatform());
-        // checkWidth();
-        // window.addEventListener('resize', checkWidth);
-        // return () => window.removeEventListener('resize', checkWidth);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     return isMobile;

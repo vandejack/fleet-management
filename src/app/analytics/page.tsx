@@ -21,14 +21,14 @@ export default function AnalyticsPage() {
   const analyticsData = useMemo(() => {
     const baseConsumption = 25; // Base consumption per vehicle per day
     const baseCost = 14500; // Cost per liter (Pertamina Dex approx)
-    
+
     return Array.from({ length: 30 }, (_, i) => {
       // Add some randomness but scale with vehicle count
       const dailyFluctuation = Math.random() * 0.4 + 0.8; // 0.8 to 1.2
       const activeVehicles = vehicles.filter(v => v.status !== 'stopped').length;
       // Fallback to 1 if no vehicles to show empty state or baseline
-      const vehicleCount = activeVehicles || 1; 
-      
+      const vehicleCount = activeVehicles || 1;
+
       const consumption = Math.round(vehicleCount * baseConsumption * dailyFluctuation);
       const cost = consumption * baseCost;
       const efficiency = 8 + (Math.random() * 4) - (vehicleCount * 0.1); // Efficiency drops slightly with more fleet complexity? Or just random.
@@ -92,8 +92,8 @@ export default function AnalyticsPage() {
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
               <span className="text-slate-600 dark:text-slate-300">
                 {entry.name}: <span className="text-slate-900 dark:text-white font-bold">{
-                  typeof entry.value === 'number' 
-                    ? (entry.name.includes('Cost') ? `Rp ${entry.value.toLocaleString('id-ID')}` : entry.value.toLocaleString()) 
+                  typeof entry.value === 'number'
+                    ? (entry.name.includes('Cost') ? `Rp ${entry.value.toLocaleString('id-ID')}` : entry.value.toLocaleString())
                     : entry.value
                 }</span>
               </span>
@@ -107,12 +107,27 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-8 h-full overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Fuel Analytics</h1>
+      <div className="p-4 md:p-8 pt-16 md:pt-8 pb-24 md:pb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Fuel Analytics</h1>
+          </div>
+
+          {/* Desktop Add Button */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus size={20} />
+            Add Fuel Record
+          </button>
+        </div>
+
+        {/* Mobile Floating Add Button */}
+        <div className="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-[900]">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
           >
             <Plus size={20} />
             Add Fuel Record
@@ -161,9 +176,9 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(value) => value.slice(5)} 
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) => value.slice(5)}
                     stroke="#64748b"
                     className="dark:text-slate-400"
                   />
@@ -182,8 +197,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={analyticsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tickFormatter={(value) => value.slice(5)}
                     stroke="#64748b"
                   />

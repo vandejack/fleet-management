@@ -117,6 +117,8 @@ function ReplayContent() {
     setCurrentIndex(0);
   };
 
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+
   return (
     <DashboardLayout>
       <div className="h-full w-full">
@@ -127,86 +129,113 @@ function ReplayContent() {
         />
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-2xl px-4 pointer-events-none">
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg pointer-events-auto border border-slate-200 dark:border-slate-700">
+      <div className="absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 z-[1000] w-full md:max-w-2xl md:px-4 pointer-events-none">
+        <div className="bg-white dark:bg-slate-900 md:dark:bg-slate-800 p-4 rounded-t-2xl md:rounded-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-lg pointer-events-auto border-t md:border border-slate-200 dark:border-slate-700">
+
+          {/* Header & Toggle for Mobile */}
           <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsConfigOpen(!isConfigOpen)}
+                className="md:hidden p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300"
+              >
+                {isConfigOpen ? <ChevronDown size={18} /> : <Filter size={18} />}
+              </button>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Route Replay</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 hidden md:block">Select vehicle and date range</p>
+              </div>
+            </div>
+
+            {/* Desktop: Inline Inputs */}
+            <div className="hidden md:flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                {/* ... existing desktop inputs code if needed, but we can reuse the mobile one responsively ... */}
+              </div>
+            </div>
+
+            {/* Mobile: Current Vehicle Display */}
+            <div className="md:hidden text-right">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{selectedVehicleData?.plate || 'Select Vehicle'}</p>
+              <p className="text-[10px] text-slate-500">{currentRoute.length} points</p>
+            </div>
+          </div>
+
+          {/* Collapsible Configuration Section */}
+          <div className={`${isConfigOpen ? 'block' : 'hidden'} md:block mb-4 space-y-3`}>
+
+            {/* Vehicle Select */}
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Route Replay</h2>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Vehicle</label>
               <select
                 value={selectedVehicleId}
                 onChange={(e) => {
                   setSelectedVehicleId(e.target.value);
                   reset();
                 }}
-                className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-transparent border-none p-0 cursor-pointer focus:ring-0 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="w-full text-sm p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>
-                    {v.plate} - {v.name}
-                  </option>
+                  <option key={v.id} value={v.id}>{v.plate} - {v.name}</option>
                 ))}
               </select>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
+
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Start Time</label>
                 <input
                   type="datetime-local"
                   value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    reset();
-                  }}
-                  className="text-xs p-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                  onChange={(e) => { setStartDate(e.target.value); reset(); }}
+                  className="w-full text-xs p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <span className="text-slate-400">-</span>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">End Time</label>
                 <input
                   type="datetime-local"
                   value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    reset();
-                  }}
-                  className="text-xs p-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                  onChange={(e) => { setEndDate(e.target.value); reset(); }}
+                  className="w-full text-xs p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mb-4">
+          {/* Controls Row */}
+          <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => {
-                if (currentIndex >= currentRoute.length - 1) {
-                  setCurrentIndex(0);
-                }
+                if (currentIndex >= currentRoute.length - 1) setCurrentIndex(0);
                 setIsPlaying(!isPlaying);
               }}
               disabled={currentRoute.length < 2}
-              className={`p-2 text-white rounded-full transition-colors ${currentRoute.length < 2 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+              className={`p-3 md:p-2 text-white rounded-full transition-colors flex-shrink-0 ${currentRoute.length < 2 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} />}
             </button>
 
             <button
               onClick={reset}
-              className="p-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+              className="p-3 md:p-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex-shrink-0"
             >
               <RotateCcw size={20} />
             </button>
 
-            <span className="text-xs text-slate-500">
-              {currentRoute.length} points
-            </span>
-
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Speed:</span>
-              <div className="flex bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
-                {[1, 2, 5, 10].map((s) => (
+            {/* Playback Stats */}
+            <div className="bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-md border border-slate-100 dark:border-slate-800 flex-1 flex items-center justify-between">
+              <div className="text-xs">
+                <span className="text-slate-400 block max-w-[60px] md:max-w-none truncate">Speed</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">{speed}x</span>
+              </div>
+              <div className="flex bg-gray-200 dark:bg-slate-800 rounded-lg p-0.5 gap-0.5">
+                {[1, 5, 10].map((s) => (
                   <button
                     key={s}
                     onClick={() => setSpeed(s)}
-                    className={`px-3 py-1 rounded-md text-sm transition-colors ${speed === s ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                      }`}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${speed === s ? 'bg-white dark:bg-slate-600 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                   >
                     {s}x
                   </button>
@@ -215,6 +244,7 @@ function ReplayContent() {
             </div>
           </div>
 
+          {/* Progress Slider */}
           <div className="w-full">
             <input
               type="range"
@@ -224,9 +254,9 @@ function ReplayContent() {
               onChange={handleSeek}
               className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>{startDate ? new Date(startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Start'}</span>
-              <span>{endDate ? new Date(endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'End'}</span>
+            <div className="flex justify-between text-[10px] text-gray-400 mt-1 font-mono">
+              <span>{currentPoint.timestamp ? new Date(currentPoint.timestamp).toLocaleTimeString() : '--:--'}</span>
+              <span>{Math.round((currentIndex / Math.max(1, currentRoute.length - 1)) * 100)}%</span>
             </div>
           </div>
         </div>
