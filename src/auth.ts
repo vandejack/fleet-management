@@ -55,6 +55,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname !== '/login';
+      const isStaticAsset = nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico)$/i);
+
+      if (isStaticAsset) return true;
 
       if (isOnDashboard) {
         if (isLoggedIn) return true;
