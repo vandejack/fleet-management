@@ -3,10 +3,15 @@
 import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
 
+export type LoginState = {
+  message?: string;
+  success?: boolean;
+};
+
 export async function authenticate(
-  prevState: string | undefined,
+  prevState: LoginState | undefined,
   formData: FormData,
-) {
+): Promise<LoginState> {
   console.log('--- ENTERING AUTHENTICATE ACTION v2 ---');
   try {
     // We use redirect: false so we can control the response
@@ -22,9 +27,9 @@ export async function authenticate(
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return 'Invalid credentials.';
+          return { message: 'Invalid credentials.', success: false };
         default:
-          return 'Something went wrong.';
+          return { message: 'Something went wrong.', success: false };
       }
     }
     // Check if it's a redirect error (NEXT_REDIRECT) - signIn might still throw it if we didn't use redirect: false
@@ -36,7 +41,7 @@ export async function authenticate(
     }
 
     console.error('[authenticate] Unhandled error:', error);
-    return 'An unexpected error occurred. Please try again.';
+    return { message: 'An unexpected error occurred. Please try again.', success: false };
   }
 }
 
