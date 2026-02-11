@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 import { getSystemSettings, updateSystemSetting } from '@/lib/actions/settings';
 import { Vehicle, Driver, Alert, MOCK_VEHICLES, MOCK_DRIVERS, MaintenanceRecord, MOCK_MAINTENANCE, FuelTransaction, MOCK_FUEL_TRANSACTIONS } from '@/utils/mockData';
 
@@ -180,8 +181,12 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     setIsInitialized(true);
   }, [initialVehicles, initialDrivers, initialMaintenance]);
 
+  const { data: session, status } = useSession();
+
   // LIVE TRACKING POLLING
   useEffect(() => {
+    if (status !== 'authenticated') return;
+
     // Poll for vehicle updates every 3 seconds
     const interval = setInterval(async () => {
       try {
@@ -216,373 +221,370 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+    window.removeEventListener('offline', handleOffline);
+  };
+}, [status]);
 
-  // Update selected vehicle when vehicles array changes
-  useEffect(() => {
-    if (selectedVehicle) {
-      const updated = vehicles.find(v => v.id === selectedVehicle.id);
-      if (updated) {
-        setSelectedVehicle(updated);
-      }
+// Update selected vehicle when vehicles array changes
+useEffect(() => {
+  if (selectedVehicle) {
+    const updated = vehicles.find(v => v.id === selectedVehicle.id);
+    if (updated) {
+      setSelectedVehicle(updated);
     }
-  }, [vehicles]);
+  }
+}, [vehicles]);
 
-  // Persist to localStorage
-  useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem('fleet_vehicles', JSON.stringify(vehicles));
-  }, [vehicles, isInitialized]);
+// Persist to localStorage
+useEffect(() => {
+  if (!isInitialized) return;
+  localStorage.setItem('fleet_vehicles', JSON.stringify(vehicles));
+}, [vehicles, isInitialized]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem('fleet_drivers', JSON.stringify(drivers));
-  }, [drivers, isInitialized]);
+useEffect(() => {
+  if (!isInitialized) return;
+  localStorage.setItem('fleet_drivers', JSON.stringify(drivers));
+}, [drivers, isInitialized]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem('fleet_alerts', JSON.stringify(alerts));
-  }, [alerts, isInitialized]);
+useEffect(() => {
+  if (!isInitialized) return;
+  localStorage.setItem('fleet_alerts', JSON.stringify(alerts));
+}, [alerts, isInitialized]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem('fleet_settings', JSON.stringify(settings));
-  }, [settings, isInitialized]);
+useEffect(() => {
+  if (!isInitialized) return;
+  localStorage.setItem('fleet_settings', JSON.stringify(settings));
+}, [settings, isInitialized]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    localStorage.setItem('fleet_maintenance', JSON.stringify(maintenance));
-  }, [maintenance, isInitialized]);
+useEffect(() => {
+  if (!isInitialized) return;
+  localStorage.setItem('fleet_maintenance', JSON.stringify(maintenance));
+}, [maintenance, isInitialized]);
 
-  // Simulation Logic
-  useEffect(() => {
-    if (!settings.simulation?.autoPlay) return;
+// Simulation Logic
+useEffect(() => {
+  if (!settings.simulation?.autoPlay) return;
 
-    const interval = setInterval(() => {
-      setVehicles(prev => prev.map(v => {
-        if (v.status !== 'moving') return v;
+  const interval = setInterval(() => {
+    setVehicles(prev => prev.map(v => {
+      if (v.status !== 'moving') return v;
 
-        const latChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
-        const lngChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
-        const fuelConsumption = Math.random() * 0.1 * settings.simulation.speed;
+      const latChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
+      const lngChange = (Math.random() - 0.5) * 0.001 * settings.simulation.speed;
+      const fuelConsumption = Math.random() * 0.1 * settings.simulation.speed;
 
-        return {
-          ...v,
-          currentLocation: {
-            ...v.currentLocation,
-            lat: v.currentLocation.lat + latChange,
-            lng: v.currentLocation.lng + lngChange,
-            timestamp: new Date().toISOString()
-          },
-          fuelLevel: Math.max(0, v.fuelLevel - fuelConsumption),
-          speed: Math.max(0, Math.min(120, v.speed + (Math.random() - 0.5) * 10))
-        };
-      }));
-    }, settings.simulation.updateInterval);
-
-    return () => clearInterval(interval);
-  }, [settings.simulation?.autoPlay, settings.simulation?.speed, settings.simulation?.updateInterval]);
-
-  // Alert Monitoring Logic
-  useEffect(() => {
-    vehicles.forEach(v => {
-      const now = Date.now();
-      const lastTime = lastAlertTimeRef.current[v.id + '_speed'] || 0;
-      const lastFuelTime = lastAlertTimeRef.current[v.id + '_fuel'] || 0;
-
-      // Speed Alert (Cooldown: 20s)
-      if (v.speed > 90 && now - lastTime > 20000) {
-        const newAlert: Alert = {
-          id: Math.random().toString(36).substr(2, 9),
-          type: 'critical',
-          message: `${v.name} is speeding (${Math.round(v.speed)} km/h)`,
-          timestamp: new Date().toISOString(),
-          vehicleId: v.id
-        };
-        setAlerts(prev => [newAlert, ...prev]);
-        lastAlertTimeRef.current[v.id + '_speed'] = now;
-      }
-
-      // Low Fuel Alert (Cooldown: 60s)
-      if (v.fuelLevel < 20 && now - lastFuelTime > 60000) {
-        const newAlert: Alert = {
-          id: Math.random().toString(36).substr(2, 9),
-          type: 'warning',
-          message: `${v.name} has low fuel (${Math.round(v.fuelLevel)}%)`,
-          timestamp: new Date().toISOString(),
-          vehicleId: v.id
-        };
-        setAlerts(prev => [newAlert, ...prev]);
-        lastAlertTimeRef.current[v.id + '_fuel'] = now;
-      }
-    });
-  }, [vehicles]);
-
-  const assignDriver = async (driverId: string, vehicleId: string) => {
-    const result = await assignDriverAction(vehicleId, driverId);
-    if (result.success && result.vehicle) {
-      // Optimistically update or rely on polling. 
-      // Let's rely on polling for full consistency or update local state immediately.
-      // Update local state:
-      const driver = drivers.find(d => d.id === driverId);
-
-      setVehicles(prev => {
-        // Unassign from others
-        const cleaned = prev.map(v => v.driver?.id === driverId ? { ...v, driver: undefined } : v);
-        // Assign to target
-        return cleaned.map(v => v.id === vehicleId ? { ...v, driver: driver } : v);
-      });
-    }
-  };
-
-  const unassignDriver = async (vehicleId: string) => {
-    // Note: Original signature was (driverId), but usually we unassign from a vehicle.
-    // Or if we unassign a driver, we find their vehicle.
-    // Let's support both or check how it's used.
-    // The context signature said `unassignDriver: (driverId: string) => void;`
-    // I should adhere to that or find the vehicle for that driver.
-
-    const vehicle = vehicles.find(v => v.driver?.id === vehicleId); // vehicleId here is actually driverId argument
-    if (vehicle) {
-      const result = await unassignDriverAction(vehicle.id);
-      if (result.success) {
-        setVehicles(prev => prev.map(v => v.id === vehicle.id ? { ...v, driver: undefined } : v));
-      }
-    }
-  };
-
-  const dismissAlert = (id: string) => {
-    setAlerts(prev => prev.filter(a => a.id !== id));
-  };
-
-  const clearAllAlerts = () => {
-    setAlerts([]);
-  };
-
-  // Load settings from localStorage and Database
-  useEffect(() => {
-    const loadSettings = async () => {
-      // 1. Load Local
-      const savedSettings = localStorage.getItem('fleet_settings');
-      let currentSettings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
-
-      // 2. Load Global
-      try {
-        const globalSettings = await getSystemSettings();
-        if (globalSettings.themeMode) {
-          currentSettings = { ...currentSettings, themeMode: globalSettings.themeMode };
-        }
-      } catch (error) {
-        console.error('Failed to load global settings:', error);
-      }
-
-      setSettings(currentSettings);
-      setIsInitialized(true);
-    };
-
-    loadSettings();
-
-    // Poll for global updates (Simple sync for now)
-    const interval = setInterval(async () => {
-      try {
-        const globalSettings = await getSystemSettings();
-        if (globalSettings.themeMode) {
-          setSettings(prev => {
-            if (prev.themeMode !== globalSettings.themeMode) {
-              return { ...prev, themeMode: globalSettings.themeMode as 'classic' | 'modern' };
-            }
-            return prev;
-          });
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const updateSettings = async (newSettings: Settings) => {
-    setSettings(newSettings);
-    localStorage.setItem('fleet_settings', JSON.stringify(newSettings));
-
-    // If theme changed, update global setting
-    if (newSettings.themeMode !== settings.themeMode) {
-      try {
-        await updateSystemSetting('themeMode', newSettings.themeMode);
-      } catch (e) {
-        console.error('Failed to update global theme:', e);
-      }
-    }
-  };
-
-  const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => {
-    // 1. Optimistic Update or Wait for Server?
-    // Let's call server first for reliability in this version
-    const result = await createVehicleAction(vehicleData);
-    if (result.success && result.vehicle) {
-      // Map DB result to UI model if needed (dates are usually strings in JSON response but check types)
-      // result.vehicle from actions return Prisma object. 
-      // We need to map it to our Vehicle interface.
-      // For simplicity, we can assume the result matches mostly or we map manually.
-      // Ideally we reuse the mapper from data.ts but that's server side.
-      // Let's just push the local data + id for now, or reload page.
-
-      // Better: Refresh page to get canonical data? 
-      // Or just append consistent with UI type
-      const newVehicle: Vehicle = {
-        ...vehicleData,
-        id: result.vehicle.id,
+      return {
+        ...v,
         currentLocation: {
-          lat: -6.2, lng: 106.8, timestamp: new Date().toISOString()
+          ...v.currentLocation,
+          lat: v.currentLocation.lat + latChange,
+          lng: v.currentLocation.lng + lngChange,
+          timestamp: new Date().toISOString()
         },
-        speed: 0,
-        status: 'idle',
-        fuelLevel: 100
+        fuelLevel: Math.max(0, v.fuelLevel - fuelConsumption),
+        speed: Math.max(0, Math.min(120, v.speed + (Math.random() - 0.5) * 10))
       };
-      setVehicles(prev => [newVehicle, ...prev]);
-    } else {
-      alert('Failed to create vehicle: ' + result.error);
-    }
-  };
+    }));
+  }, settings.simulation.updateInterval);
 
-  const updateVehicle = async (id: string, data: Partial<Vehicle>) => {
-    const result = await updateVehicleAction(id, data);
-    if (result.success) {
-      setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
-    }
-  };
+  return () => clearInterval(interval);
+}, [settings.simulation?.autoPlay, settings.simulation?.speed, settings.simulation?.updateInterval]);
 
-  const addDriver = async (driverData: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => {
-    const result = await createDriverAction(driverData);
-    if (result.success && result.driver) {
-      const newDriver: Driver = {
-        ...driverData,
-        id: result.driver.id,
-        joinedDate: new Date().toISOString().split('T')[0],
-        totalTrips: 0,
-        rating: 5.0
+// Alert Monitoring Logic
+useEffect(() => {
+  vehicles.forEach(v => {
+    const now = Date.now();
+    const lastTime = lastAlertTimeRef.current[v.id + '_speed'] || 0;
+    const lastFuelTime = lastAlertTimeRef.current[v.id + '_fuel'] || 0;
+
+    // Speed Alert (Cooldown: 20s)
+    if (v.speed > 90 && now - lastTime > 20000) {
+      const newAlert: Alert = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'critical',
+        message: `${v.name} is speeding (${Math.round(v.speed)} km/h)`,
+        timestamp: new Date().toISOString(),
+        vehicleId: v.id
       };
-      setDrivers(prev => [...prev, newDriver]);
+      setAlerts(prev => [newAlert, ...prev]);
+      lastAlertTimeRef.current[v.id + '_speed'] = now;
     }
-  };
 
-  const updateDriver = async (id: string, data: Partial<Driver>) => {
-    await updateDriverAction(id, data);
-    setDrivers(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
-  };
-
-  const addMaintenance = async (record: Omit<MaintenanceRecord, 'id'>) => {
-    const result = await createMaintenanceAction(record);
-    if (result.success && result.maintenance) {
-      const newRecord: MaintenanceRecord = {
-        ...record,
-        id: result.maintenance.id
+    // Low Fuel Alert (Cooldown: 60s)
+    if (v.fuelLevel < 20 && now - lastFuelTime > 60000) {
+      const newAlert: Alert = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'warning',
+        message: `${v.name} has low fuel (${Math.round(v.fuelLevel)}%)`,
+        timestamp: new Date().toISOString(),
+        vehicleId: v.id
       };
-      setMaintenance(prev => [...prev, newRecord]);
+      setAlerts(prev => [newAlert, ...prev]);
+      lastAlertTimeRef.current[v.id + '_fuel'] = now;
     }
-  };
-
-  const updateMaintenance = async (id: string, data: Partial<MaintenanceRecord>) => {
-    await updateMaintenanceAction(id, data);
-    setMaintenance(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
-  };
-
-  const addFuelTransaction = (transaction: Omit<FuelTransaction, 'id'>) => {
-    const newTransaction: FuelTransaction = {
-      ...transaction,
-      id: Math.random().toString(36).substr(2, 9)
-    };
-    setFuelTransactions(prev => [newTransaction, ...prev]);
-  };
-
-  // Replay State
-  const [replayState, setReplayState] = useState<{
-    isActive: boolean;
-    vehicleId: string | null;
-    route: any[];
-    currentIndex: number;
-    isPlaying: boolean;
-  }>({
-    isActive: false,
-    vehicleId: null,
-    route: [],
-    currentIndex: 0,
-    isPlaying: false
   });
+}, [vehicles]);
 
-  const startReplay = (route: any[], vehicleId: string) => {
-    setReplayState({
-      isActive: true,
-      vehicleId,
-      route,
-      currentIndex: 0,
-      isPlaying: true
+const assignDriver = async (driverId: string, vehicleId: string) => {
+  const result = await assignDriverAction(vehicleId, driverId);
+  if (result.success && result.vehicle) {
+    // Optimistically update or rely on polling. 
+    // Let's rely on polling for full consistency or update local state immediately.
+    // Update local state:
+    const driver = drivers.find(d => d.id === driverId);
+
+    setVehicles(prev => {
+      // Unassign from others
+      const cleaned = prev.map(v => v.driver?.id === driverId ? { ...v, driver: undefined } : v);
+      // Assign to target
+      return cleaned.map(v => v.id === vehicleId ? { ...v, driver: driver } : v);
     });
+  }
+};
+
+const unassignDriver = async (vehicleId: string) => {
+  // Note: Original signature was (driverId), but usually we unassign from a vehicle.
+  // Or if we unassign a driver, we find their vehicle.
+  // Let's support both or check how it's used.
+  // The context signature said `unassignDriver: (driverId: string) => void;`
+  // I should adhere to that or find the vehicle for that driver.
+
+  const vehicle = vehicles.find(v => v.driver?.id === vehicleId); // vehicleId here is actually driverId argument
+  if (vehicle) {
+    const result = await unassignDriverAction(vehicle.id);
+    if (result.success) {
+      setVehicles(prev => prev.map(v => v.id === vehicle.id ? { ...v, driver: undefined } : v));
+    }
+  }
+};
+
+const dismissAlert = (id: string) => {
+  setAlerts(prev => prev.filter(a => a.id !== id));
+};
+
+const clearAllAlerts = () => {
+  setAlerts([]);
+};
+
+// Load settings from localStorage and Database
+useEffect(() => {
+  const loadSettings = async () => {
+    // 1. Load Local
+    const savedSettings = localStorage.getItem('fleet_settings');
+    let currentSettings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
+
+    // 2. Load Global
+    try {
+      const globalSettings = await getSystemSettings();
+      if (globalSettings.themeMode) {
+        currentSettings = { ...currentSettings, themeMode: globalSettings.themeMode };
+      }
+    } catch (error) {
+      console.error('Failed to load global settings:', error);
+    }
+
+    setSettings(currentSettings);
+    setIsInitialized(true);
   };
 
-  const stopReplay = () => {
-    setReplayState(prev => ({ ...prev, isActive: false, isPlaying: false, currentIndex: 0 }));
+  loadSettings();
+
+  // Poll for global updates (Simple sync for now)
+  const interval = setInterval(async () => {
+    try {
+      const globalSettings = await getSystemSettings();
+      if (globalSettings.themeMode) {
+        setSettings(prev => {
+          if (prev.themeMode !== globalSettings.themeMode) {
+            return { ...prev, themeMode: globalSettings.themeMode as 'classic' | 'modern' };
+          }
+          return prev;
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, 5000); // Check every 5 seconds
+
+  return () => clearInterval(interval);
+}, []);
+
+const updateSettings = async (newSettings: Settings) => {
+  setSettings(newSettings);
+  localStorage.setItem('fleet_settings', JSON.stringify(newSettings));
+
+  // If theme changed, update global setting
+  if (newSettings.themeMode !== settings.themeMode) {
+    try {
+      await updateSystemSetting('themeMode', newSettings.themeMode);
+    } catch (e) {
+      console.error('Failed to update global theme:', e);
+    }
+  }
+};
+
+const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => {
+  // 1. Optimistic Update or Wait for Server?
+  // Let's call server first for reliability in this version
+  const result = await createVehicleAction(vehicleData);
+  if (result.success && result.vehicle) {
+    // Map DB result to UI model if needed (dates are usually strings in JSON response but check types)
+    // result.vehicle from actions return Prisma object. 
+    // We need to map it to our Vehicle interface.
+    // For simplicity, we can assume the result matches mostly or we map manually.
+    // Ideally we reuse the mapper from data.ts but that's server side.
+    // Let's just push the local data + id for now, or reload page.
+
+    // Better: Refresh page to get canonical data? 
+    // Or just append consistent with UI type
+    const newVehicle: Vehicle = {
+      ...vehicleData,
+      id: result.vehicle.id,
+      currentLocation: {
+        lat: -6.2, lng: 106.8, timestamp: new Date().toISOString()
+      },
+      speed: 0,
+      status: 'idle',
+      fuelLevel: 100
+    };
+    setVehicles(prev => [newVehicle, ...prev]);
+  } else {
+    alert('Failed to create vehicle: ' + result.error);
+  }
+};
+
+const updateVehicle = async (id: string, data: Partial<Vehicle>) => {
+  const result = await updateVehicleAction(id, data);
+  if (result.success) {
+    setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+  }
+};
+
+const addDriver = async (driverData: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => {
+  const result = await createDriverAction(driverData);
+  if (result.success && result.driver) {
+    const newDriver: Driver = {
+      ...driverData,
+      id: result.driver.id,
+      joinedDate: new Date().toISOString().split('T')[0],
+      totalTrips: 0,
+      rating: 5.0
+    };
+    setDrivers(prev => [...prev, newDriver]);
+  }
+};
+
+const updateDriver = async (id: string, data: Partial<Driver>) => {
+  await updateDriverAction(id, data);
+  setDrivers(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+};
+
+const addMaintenance = async (record: Omit<MaintenanceRecord, 'id'>) => {
+  const result = await createMaintenanceAction(record);
+  if (result.success && result.maintenance) {
+    const newRecord: MaintenanceRecord = {
+      ...record,
+      id: result.maintenance.id
+    };
+    setMaintenance(prev => [...prev, newRecord]);
+  }
+};
+
+const updateMaintenance = async (id: string, data: Partial<MaintenanceRecord>) => {
+  await updateMaintenanceAction(id, data);
+  setMaintenance(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+};
+
+const addFuelTransaction = (transaction: Omit<FuelTransaction, 'id'>) => {
+  const newTransaction: FuelTransaction = {
+    ...transaction,
+    id: Math.random().toString(36).substr(2, 9)
   };
+  setFuelTransactions(prev => [newTransaction, ...prev]);
+};
 
-  const toggleReplay = () => {
-    setReplayState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
-  };
+// Replay State
+const [replayState, setReplayState] = useState<{
+  isActive: boolean;
+  vehicleId: string | null;
+  route: any[];
+  currentIndex: number;
+  isPlaying: boolean;
+}>({
+  isActive: false,
+  vehicleId: null,
+  route: [],
+  currentIndex: 0,
+  isPlaying: false
+});
 
-  // Replay Loop
-  useEffect(() => {
-    if (!replayState.isActive || !replayState.isPlaying || replayState.route.length === 0) return;
+const startReplay = (route: any[], vehicleId: string) => {
+  setReplayState({
+    isActive: true,
+    vehicleId,
+    route,
+    currentIndex: 0,
+    isPlaying: true
+  });
+};
 
-    const interval = setInterval(() => {
-      setReplayState(prev => {
-        if (prev.currentIndex >= prev.route.length - 1) {
-          // End of route
-          return { ...prev, isPlaying: false };
-        }
-        return { ...prev, currentIndex: prev.currentIndex + 1 };
-      });
-    }, 1000); // 1 second per point
+const stopReplay = () => {
+  setReplayState(prev => ({ ...prev, isActive: false, isPlaying: false, currentIndex: 0 }));
+};
 
-    return () => clearInterval(interval);
-  }, [replayState.isActive, replayState.isPlaying, replayState.route]);
+const toggleReplay = () => {
+  setReplayState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+};
 
-  return (
-    <FleetContext.Provider value={{
-      vehicles,
-      drivers,
-      alerts,
-      settings,
-      maintenance,
-      fuelTransactions,
-      replayState,
-      isOffline,
-      lastSyncTime,
-      assignDriver,
-      unassignDriver,
-      dismissAlert,
-      clearAllAlerts,
-      updateSettings,
-      addVehicle,
-      updateVehicle,
-      addDriver,
-      updateDriver,
-      addMaintenance,
-      updateMaintenance,
-      addFuelTransaction,
-      selectedVehicle,
-      setSelectedVehicle,
-      startReplay,
-      stopReplay,
-      toggleReplay
-    }}>
-      {children}
-    </FleetContext.Provider>
-  );
+// Replay Loop
+useEffect(() => {
+  if (!replayState.isActive || !replayState.isPlaying || replayState.route.length === 0) return;
+
+  const interval = setInterval(() => {
+    setReplayState(prev => {
+      if (prev.currentIndex >= prev.route.length - 1) {
+        // End of route
+        return { ...prev, isPlaying: false };
+      }
+      return { ...prev, currentIndex: prev.currentIndex + 1 };
+    });
+  }, 1000); // 1 second per point
+
+  return () => clearInterval(interval);
+}, [replayState.isActive, replayState.isPlaying, replayState.route]);
+
+return (
+  <FleetContext.Provider value={{
+    vehicles,
+    drivers,
+    alerts,
+    settings,
+    maintenance,
+    fuelTransactions,
+    replayState,
+    isOffline,
+    lastSyncTime,
+    assignDriver,
+    unassignDriver,
+    dismissAlert,
+    clearAllAlerts,
+    updateSettings,
+    addVehicle,
+    updateVehicle,
+    addDriver,
+    updateDriver,
+    addMaintenance,
+    updateMaintenance,
+    addFuelTransaction,
+    selectedVehicle,
+    setSelectedVehicle,
+    startReplay,
+    stopReplay,
+    toggleReplay
+  }}>
+    {children}
+  </FleetContext.Provider>
+);
 };
 
 export const useFleet = () => {
