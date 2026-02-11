@@ -59,6 +59,8 @@ interface FleetContextType {
   maintenance: MaintenanceRecord[];
   fuelTransactions: FuelTransaction[];
   selectedVehicle: Vehicle | null;
+  isOffline: boolean;
+  lastSyncTime: string | null;
   setSelectedVehicle: (vehicle: Vehicle | null) => void;
   assignDriver: (driverId: string, vehicleId: string) => void;
   unassignDriver: (driverId: string) => void;
@@ -95,6 +97,8 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const lastAlertTimeRef = useRef<Record<string, number>>({});
 
   // Initialize from localStorage or Props
@@ -183,6 +187,8 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       try {
         const result = await getVehiclesAction();
         if (result.success && result.vehicles) {
+          setIsOffline(false);
+          setLastSyncTime(new Date().toISOString());
           setVehicles(prev => {
             // Map server vehicles to UI format
             return result.vehicles.map((v: any) => ({
@@ -200,10 +206,21 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
         }
       } catch (error) {
         console.error('Polling error:', error);
+        setIsOffline(true);
       }
     }, 3000);
 
-    return () => clearInterval(interval);
+    // Initial check and browser online/offline events
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // Update selected vehicle when vehicles array changes
@@ -543,6 +560,8 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       maintenance,
       fuelTransactions,
       replayState,
+      isOffline,
+      lastSyncTime,
       assignDriver,
       unassignDriver,
       dismissAlert,

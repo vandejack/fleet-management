@@ -1,10 +1,12 @@
 'use client';
 import { Vehicle } from '@/utils/mockData';
-import { X, User, Phone, Truck, Calendar, Wrench, Battery, Signal, Gauge, Clock, Thermometer, Power, AlertCircle, Eye, EyeOff, Cigarette, PhoneCall, UserMinus, Coffee } from 'lucide-react';
+import { X, User, Phone, Truck, Calendar, Wrench, Battery, Signal, Gauge, Clock, Thermometer, Power, AlertCircle, Eye, EyeOff, Cigarette, PhoneCall, UserMinus, Coffee, Camera } from 'lucide-react';
 import { getVehicleBehaviorEvents } from '@/lib/actions';
 import { useState, useEffect } from 'react';
 import { BehaviorEvent } from '@/utils/mockData';
-import { useFleet } from '@/context/FleetContext'; // Added useFleet
+import { useFleet } from '@/context/FleetContext';
+import { takePhoto } from '@/lib/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface VehicleDetailPanelProps {
   vehicle: Vehicle | null;
@@ -15,6 +17,14 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
   const [behaviorEvents, setBehaviorEvents] = useState<BehaviorEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<BehaviorEvent | null>(null);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+
+  const handleCapturePhoto = async () => {
+    const photoPath = await takePhoto();
+    if (photoPath) {
+      setCapturedPhoto(photoPath);
+    }
+  };
 
   useEffect(() => {
     if (vehicle) {
@@ -217,6 +227,34 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                   More Details
                 </button>
               </div>
+
+              {/* Photo Capture Section (Mobile Only) */}
+              {Capacitor.isNativePlatform() && (
+                <div className="bg-slate-800/30 rounded-xl border border-white/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                      <Camera size={16} className="text-purple-400" /> Maintenance Photo
+                    </span>
+                    <button
+                      onClick={handleCapturePhoto}
+                      className="px-3 py-1.5 bg-purple-600/20 text-purple-400 text-xs rounded-lg hover:bg-purple-600/30 transition-colors"
+                    >
+                      Take Photo
+                    </button>
+                  </div>
+                  {capturedPhoto && (
+                    <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
+                      <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => setCapturedPhoto(null)}
+                        className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

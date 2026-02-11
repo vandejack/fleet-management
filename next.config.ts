@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["fms.aicrone.id", "192.168.1.101", "localhost:3000"],
     },
   },
-  turbopack: {
-    root: __dirname,
-  },
 };
 
 export default nextConfig;

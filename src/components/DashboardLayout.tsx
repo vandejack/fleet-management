@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMobile } from '@/hooks/useMobile';
 import { useFleet } from '@/context/FleetContext';
+import { WifiOff, CloudSync, AlertTriangle } from 'lucide-react';
 import FloatingPanel from './FloatingPanel';
 import VehicleListPanel from './panels/VehicleListPanel';
 import AnalyticsPanel from './panels/AnalyticsPanel';
@@ -16,14 +17,15 @@ import DriversPanel from './panels/DriversPanel';
 import MaintenancePanel from './panels/MaintenancePanel';
 import SchedulePanel from './panels/SchedulePanel';
 import { VehicleDetailPanel } from './VehicleDetailPanel';
+import { PushNotificationManager } from './PushNotificationManager';
 
 type PanelType = 'vehicles' | 'analytics' | 'history' | 'settings' | 'drivers' | 'maintenance' | 'schedule' | 'routes' | null;
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<PanelType>(null);
-  const [isScrolled, setIsScrolled] = useState(false); // New state for scroll detection
-  const { settings, selectedVehicle, setSelectedVehicle } = useFleet();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { settings, selectedVehicle, setSelectedVehicle, isOffline, lastSyncTime } = useFleet();
   const pathname = usePathname();
   const isMapPage = pathname === '/' || pathname === '/replay';
   const isMobile = useMobile();
@@ -68,6 +70,14 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             alt="AICrone"
             className="h-8 w-auto object-contain brightness-0 dark:invert lg:hidden"
           />
+        </div>
+      )}
+
+      {/* Offline Indicator Banner */}
+      {isOffline && (
+        <div className="fixed top-0 left-0 right-0 z-[6000] bg-red-600 text-white text-[10px] py-1 px-4 flex items-center justify-center gap-2 animate-pulse">
+          <WifiOff size={12} />
+          <span>Offline Mode: Showing cached data from {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'last session'}</span>
         </div>
       )}
 
@@ -158,6 +168,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         vehicle={selectedVehicle}
         onClose={() => setSelectedVehicle(null)}
       />
+
+      <PushNotificationManager />
     </div>
   );
 };

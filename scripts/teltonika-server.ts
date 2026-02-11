@@ -1,26 +1,132 @@
+import net from 'net';
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
 
-const net = require('net');
-const fs = require('fs');
-const path = require('path');
+dotenv.config();
 
-const PORT = process.env.PORT || 7001;
+import { PrismaClient } from '@prisma/client';
+import * as admin from 'firebase-admin';
+
+const PORT = Number(process.env.PORT) || 7001;
 const SNAPSHOT_DIR = path.join(__dirname, '..', 'public', 'snapshots');
 
 if (!fs.existsSync(SNAPSHOT_DIR)) {
     fs.mkdirSync(SNAPSHOT_DIR, { recursive: true });
 }
 
-const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const server = net.createServer((socket) => {
+// Speeding configuration
+const SPEED_THRESHOLD = 100; // km/h
+const NOTIFICATION_COOLDOWN = 5 * 60 * 1000; // 5 minutes
+const lastNotificationSent = new Map(); // IMEI -> timestamp
+
+// Initialize Firebase Admin if possible
+const serviceAccountPath = path.join(__dirname, '..', 'firebase-service-account.json');
+
+if (fs.existsSync(serviceAccountPath) && !admin.apps.length) {
+    try {
+        console.log(`[FIREBASE] Loading service account from: ${serviceAccountPath}`);
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+        console.log(`[FIREBASE] Private Key length: ${serviceAccount.private_key?.length}`);
+
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+        });
+        console.log('Firebase Admin initialized successfully from JSON object');
+    } catch (e: any) {
+        console.error('Firebase initialization error:', e.message);
+        if (e.stack) console.error(e.stack);
+    }
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT && !admin.apps.length) {
+    try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+        });
+        console.log('Firebase Admin initialized using environment variable');
+    } catch (e: any) {
+        console.error('Firebase environment variable initialization error:', e.message);
+    }
+}
+
+async function sendSpeedingNotification(vehicle: any, speed: number, timestamp: Date) {
+    if (!admin.apps.length) return;
+
+    const cooldownKey = vehicle.imei;
+    const now = Date.now();
+    const lastSent = lastNotificationSent.get(cooldownKey) || 0;
+
+    if (now - lastSent < NOTIFICATION_COOLDOWN) {
+        return;
+    }
+
+    try {
+        // Find users for the company to send notifications to
+        const users = await prisma.user.findMany({
+            where: { companyId: vehicle.companyId },
+            include: { pushTokens: true }
+        });
+
+        const allTokens = users.flatMap((u: any) => u.pushTokens.map((t: any) => t.token));
+
+        if (allTokens.length > 0) {
+            const message: admin.messaging.MulticastMessage = {
+                tokens: allTokens,
+                notification: {
+                    title: `⚠️ Speeding Alert: ${vehicle.name}`,
+                    body: `${vehicle.name} (${vehicle.plate}) is traveling at ${speed} km/h.`,
+                },
+                data: {
+                    type: 'speeding',
+                    vehicleId: vehicle.id,
+                    speed: speed.toString(),
+                    timestamp: timestamp.toISOString()
+                },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        sound: 'default',
+                        clickAction: 'FCM_PLUGIN_ACTIVITY',
+                    },
+                },
+            };
+
+            const response = await admin.messaging().sendEachForMulticast(message);
+            console.log(`[PUSH] Speeding notification sent for ${vehicle.name}: ${response.successCount} success, ${response.failureCount} failure`);
+            lastNotificationSent.set(cooldownKey, now);
+
+            // Cleanup invalid tokens
+            if (response.failureCount > 0) {
+                const tokensToRemove: string[] = [];
+                response.responses.forEach((res: any, idx: number) => {
+                    if (!res.success && res.error &&
+                        (res.error.code === 'messaging/invalid-registration-token' ||
+                            res.error.code === 'messaging/registration-token-not-registered')) {
+                        tokensToRemove.push(allTokens[idx]);
+                    }
+                });
+                if (tokensToRemove.length > 0) {
+                    await prisma.pushToken.deleteMany({
+                        where: { token: { in: tokensToRemove } }
+                    });
+                }
+            }
+        }
+    } catch (err: any) {
+        console.error('[PUSH ERROR] Failed to send speeding notification:', err.message);
+    }
+}
+
+const server = net.createServer((socket: any) => {
     console.log('ANTIGRAVITY STABILIZED SERVER v999 STARTING');
     console.log('Client connected');
 
     let imei = '';
     let buffer = Buffer.alloc(0);
 
-    socket.on('data', async (chunk) => {
+    socket.on('data', async (chunk: Buffer) => {
         try {
             buffer = Buffer.concat([buffer, chunk]);
 
@@ -245,8 +351,12 @@ const server = net.createServer((socket) => {
                                                 data: updateData
                                             });
                                             console.log(`[DEBUG_UPDATE] SUCCESS for ${imei}`);
-                                        } catch (updateErr) {
-                                            console.error(`[DEBUG_UPDATE] FAILED for ${imei}:`, updateErr);
+
+                                            if (speed > SPEED_THRESHOLD) {
+                                                sendSpeedingNotification(vehicle, speed, locationDate);
+                                            }
+                                        } catch (updateErr: any) {
+                                            console.error(`[DEBUG_UPDATE] FAILED for ${imei}:`, updateErr.message);
                                         }
                                     } else {
                                         console.log(`[DEBUG_UPDATE] SKIPPING Update for ${imei} - Data (Feb 5/Old) is older than current Vehicle state.`);
@@ -288,7 +398,7 @@ const server = net.createServer((socket) => {
                         if (socket.writable) {
                             const response = Buffer.alloc(4);
                             response.writeUInt32BE(recordCount, 0);
-                            socket.write(response, (err) => { if (err) console.error('[WRITE ERR]', err.message); });
+                            socket.write(response, (err: any) => { if (err) console.error('[WRITE ERR]', err.message); });
                         }
 
                     } else if (codecId === 12 || codecId === 13 || codecId === 15) {
@@ -353,21 +463,21 @@ const server = net.createServer((socket) => {
                         if (socket.writable) {
                             const response = Buffer.alloc(4);
                             response.writeUInt32BE(recordCount, 0);
-                            socket.write(response, (err) => { if (err) console.error('[WRITE ERR]', err.message); });
+                            socket.write(response, (err: any) => { if (err) console.error('[WRITE ERR]', err.message); });
                         }
                     }
-                } catch (parseErr) {
+                } catch (parseErr: any) {
                     console.error(`[PARSE ERROR]`, parseErr.message);
                 }
             }
-        } catch (globalErr) {
+        } catch (globalErr: any) {
             console.error(`[CRITICAL SOCKET ERROR]`, globalErr.message);
         }
     });
 
     socket.on('end', () => console.log(`Client ${imei || 'unknown'} disconnected`));
-    socket.on('error', (err) => {
-        if ((err as any).code !== 'ECONNRESET' && (err as any).code !== 'EPIPE') {
+    socket.on('error', (err: any) => {
+        if (err.code !== 'ECONNRESET' && err.code !== 'EPIPE') {
             console.error(`Socket error:`, err.message);
         }
     });

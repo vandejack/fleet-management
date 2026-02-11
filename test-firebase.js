@@ -1,0 +1,21 @@
+const admin = require('firebase-admin');
+
+const serviceAccount = {
+    "type": "service_account",
+    "project_id": "fleet-management-7c999",
+    "private_key_id": "7c80827619677422153dd1e26947250b3b170ed3",
+    "private_key": `-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDRASnBBkUSIeiL\n8wK3vXfGGD7aY9lFb5dq/VLsNoHE6rG7taGRR0Aa/qzip4wwPZcmGHEDT9rV1NjW\npkP5XA6sTLoKaKlmEjkvCZyJvbCRzT1SS8kquQMsrE7LrodPYI7aJHrMuWcHQODq\nRhH/FEtdImJvLIiwlBB29mdhpm+lFJfAhG4FR7GXApIxvrmZ4wMXK1fkKtE1pQzz\ninoMjKOa1NRczH2R2g6oEo8xmifvMFD9stYqbnczWnsQsq4rQcmHrO2QTLLwosus\nIxM8mufsTBx+mTpPFdMK25BV109iYGFZKppOaZ2qI9rTMOTMAjlqbfsMyp9mQO5V\nUvL6BELTAgMBAAECggEAJy4GI0KnIRKNMur/t+0DLnXuFmeAW+Vi57IMYO6I3h62\n6b7PRloqeMUEKMsK2yI4mvIbAWlvVwV7DqYFeRHaSE9r0razBsjkwl4VY7bVCkgE\ntlAxqlobb7zvWnxhri4mKVuMT6Nz3ma5owE2r3Ag/pkLBdc92ogvG/XuBF68cB/4\n3UwTa5g+vh3U/FYNOdvQA8MMHLmGc/SOh1ltJX+tMi8UQjy7hdAjeGriVKc5BZuF\nvUBdRMCwJssdLAEMrexY63Vhssal1pMxutA70LLIaz/bwumEc8gJNabCxNyA6pHa\nlkmHMRGusaSrfCoUEQ2joojhhZB7jcTzdoM56JxCyQKBgQDuVWJqOlpM0ySd1Don\nQDVFt91GI8w5vAD1kK8gQCnfPuudoqUCh2dv+iB7n55w8d/stcWCe7favWMpFNel\nU+1HNI8idEDhe28Dd5vIIA4ZT/Nifx/JuaJsioVt0GbCLp27OG/opV2TbsTCf3Bg\nRlnyJcLbY+g2oaXdBKBO+/bGeQKBgQDgfzthSY3F/FXUuvk9bbvpc97PS3UaXeVC\n3Z9RXFiKyagg+gAvm5v8p9/eobGU3HEcIrWAqxlSHNvuE1sT3WID3ZC67QeF9WpJ\nazernJr0Dh/W+jUDE3yxs0Dh/W+jUDE3yxs0Dx15YLAevyG+8p1snCteje0aQRzvr/6AY2xQvaS9dr\nOD2w/O8wqwKBgQCm4n7xJz8HwGlJYsv9pAYpdV+pt3NPkgeR6+fUy1kGi4ZscPDe\nXnXdgOWx6skFCTjlBTrx7TOGJUsD/yYpDCV/0JvRYln0CXxojx4z+c4lh0hDVgSq\nOiQzoKNhi6YInp+v8wrZesGVdOCt2JKVt21QE4ToHoMBjhsYMh8Wb3QS8QKBgHrM\nHabxnOMXS7u5Kmw3gfoIr2+kTsHFaopQv7y5TpVcCONA3Kkt7P0eto4I1CIhEp3Z\nPn7LGGaZ8pMfc0pCZkLHB0u4K81SmHjgdOsiFoA42aG16xlrp2FsM7IVwrTysCUW\nspOoWWSYLHD1K1Gybglc2UlML1eQ9JxpfxU4xX1RAoGBAKiQitJcrI6C4gzIzZCz\ncC+xhgF9vevw1oGrRagIJIUNOxB3skfrkCG9QT9ibB+ddbJcVnYnFQL72C0D6+nk\nnzSTq8kKKte2VzfPGrAu1+szZueXH1tY1kRDNdiiMTzllhPhFGPDbQRQtSUXer7B\na9CU6DFV4J9CqcLNG0DJyljt\n-----END PRIVATE KEY-----\n`,
+    "client_email": "firebase-adminsdk-fbsvc@fleet-management-7c999.iam.gserviceaccount.com"
+};
+
+// Clean the key
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n').trim();
+
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Firebase initialized successfully in test script');
+} catch (e) {
+    console.error('Firebase test failure:', e.message);
+}

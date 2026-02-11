@@ -4,11 +4,29 @@ import { useFleet } from '@/context/FleetContext';
 import { Bell, Globe, Save, Shield, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import { getCurrentPosition, watchPosition } from '@/lib/location';
+import { checkBiometricAvailability, authenticateWithBiometrics } from '@/lib/biometrics';
+import { MapPin, Fingerprint } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useFleet();
   const [localSettings, setLocalSettings] = useState(settings);
   const [isSaved, setIsSaved] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const [watchId, setWatchId] = useState<string | null>(null);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+
+  useEffect(() => {
+    const checkBiometrics = async () => {
+      const available = await checkBiometricAvailability();
+      setBiometricAvailable(available);
+    };
+    if (Capacitor.isNativePlatform()) {
+      checkBiometrics();
+    }
+  }, []);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -222,7 +240,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-slate-500 dark:text-slate-400">Manage your account access and security</p>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">Session Control</p>
@@ -236,6 +254,64 @@ export default function SettingsPage() {
                   Sign Out
                 </button>
               </div>
+
+              {Capacitor.isNativePlatform() && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white">Background Tracking</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Track your location for fleet management while app is minimized</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={isTracking}
+                      onChange={async () => {
+                        if (isTracking) {
+                          if (watchId) {
+                            // Geolocation.clearWatch({ id: watchId }); // Need to import Geolocation or use a helper
+                          }
+                          setIsTracking(false);
+                          setWatchId(null);
+                        } else {
+                          const id = await watchPosition((pos) => {
+                            console.log('New position:', pos);
+                            // Here we would typically send this to the server
+                          });
+                          setIsTracking(true);
+                          setWatchId(id);
+                        }
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+              )}
+
+              {biometricAvailable && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white">Biometric Login</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Use Fingerprint or FaceID to access your account faster</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={biometricEnabled}
+                      onChange={async () => {
+                        if (!biometricEnabled) {
+                          const success = await authenticateWithBiometrics();
+                          if (success) setBiometricEnabled(true);
+                        } else {
+                          setBiometricEnabled(false);
+                        }
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-cyan-600"></div>
+                  </label>
+                </div>
+              )}
             </div>
           </section>
         </div>
