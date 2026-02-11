@@ -7,6 +7,7 @@ export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
 ) {
+  console.log('--- ENTERING AUTHENTICATE ACTION v2 ---');
   try {
     // We use redirect: false so we can control the response
     await signIn('credentials', {
