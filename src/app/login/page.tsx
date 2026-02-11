@@ -1,17 +1,31 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { authenticate } from './actions';
 import { Cinzel } from 'next/font/google';
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Map from '@/components/Map';
+import { useRouter } from 'next/navigation';
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
 
 export default function LoginPage() {
-  const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
+  const router = useRouter();
+  // State can be: undefined (initial), string (error), or { success: true }
+  const [formState, dispatch, isPending] = useActionState(authenticate, undefined);
+
+  useEffect(() => {
+    if (formState && typeof formState === 'object' && 'success' in formState && formState.success) {
+      // Successful login!
+      // Force a hard reload to ensure all contexts are refreshed with the new session cookie
+      window.location.href = '/';
+    }
+  }, [formState, router]);
+
+  // Extract error message if state is a string
+  const errorMessage = typeof formState === 'string' ? formState : null;
 
   return (
     <div className="min-h-[100dvh] w-full flex items-center justify-center p-0 relative bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
@@ -111,10 +125,10 @@ export default function LoginPage() {
               aria-disabled={isPending}
               disabled={isPending}
             >
-              {isPending ? (
+              {isPending || (formState && typeof formState === 'object' && 'success' in formState) ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Signing in...
+                  {formState && typeof formState === 'object' && 'success' in formState ? 'Redirecting...' : 'Signing in...'}
                 </>
               ) : (
                 <>

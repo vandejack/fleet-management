@@ -8,7 +8,14 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    // We use redirect: false so we can control the response
+    await signIn('credentials', {
+      ...Object.fromEntries(formData),
+      redirect: false,
+    });
+
+    // If we get here without error, it's successful
+    return { success: true };
   } catch (error) {
     console.log('[authenticate] Caught error:', error);
     if (error instanceof AuthError) {
@@ -19,17 +26,16 @@ export async function authenticate(
           return 'Something went wrong.';
       }
     }
-    // Check if it's a redirect error (NEXT_REDIRECT)
+    // Check if it's a redirect error (NEXT_REDIRECT) - signIn might still throw it if we didn't use redirect: false
+    // But since we use redirect: false, strictly speaking it shouldn't throw NEXT_REDIRECT for success.
+    // However, let's keep it safe.
     if ((error as any).message === 'NEXT_REDIRECT' || (error as any).digest?.startsWith('NEXT_REDIRECT')) {
-      console.log('[authenticate] Re-throwing redirect error');
-      throw error;
+      console.log('[authenticate] Caught redirect error, treating as success');
+      return { success: true };
     }
 
     console.error('[authenticate] Unhandled error:', error);
-    // If it's a real crash, return a message instead of blowing up the client
-    // But we must be careful not to swallow redirects if the check above misses some cases.
-    // For now, let's re-throw but log it first.
-    throw error;
+    return 'An unexpected error occurred. Please try again.';
   }
 }
 
