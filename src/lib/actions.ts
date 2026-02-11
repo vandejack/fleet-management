@@ -291,7 +291,14 @@ export async function updateMaintenance(id: string, data: any) {
 }
 
 export async function getVehicles() {
-    const session = await auth();
+    let session;
+    try {
+        session = await auth();
+    } catch (e) {
+        console.error('Auth check failed:', e);
+        return { success: false, error: 'Auth check failed' };
+    }
+
     try {
         console.log('[getVehicles] Start');
         const user = session?.user as any;
