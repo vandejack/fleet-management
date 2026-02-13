@@ -71,9 +71,7 @@ export const PushNotificationManager = () => {
                                 id: new Date().getTime(),
                                 schedule: { at: new Date(Date.now() + 100) },
                                 sound: 'default',
-                                attachments: null,
                                 actionTypeId: '',
-                                extra: null
                             }
                         ]
                     });
