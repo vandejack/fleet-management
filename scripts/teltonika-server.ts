@@ -354,8 +354,29 @@ const server = net.createServer((socket: any) => {
                                             });
                                             console.log(`[DEBUG_UPDATE] SUCCESS for ${imei}`);
 
+                                            // Save SPEEDING event to database
                                             if (speed > SPEED_THRESHOLD) {
                                                 sendSpeedingNotification(vehicle, speed, locationDate);
+
+                                                // Save speeding event to database
+                                                if (vehicle.driverId) {
+                                                    try {
+                                                        await prisma.driverBehaviorEvent.create({
+                                                            data: {
+                                                                vehicleId: vehicle.id,
+                                                                driverId: vehicle.driverId,
+                                                                type: 'SPEEDING',
+                                                                value: speed,
+                                                                timestamp: locationDate
+                                                            }
+                                                        });
+                                                        console.log(`[EVENT] SPEEDING (${speed} km/h) saved for driver ${vehicle.driverId}`);
+                                                    } catch (eventErr) {
+                                                        console.error(`[EVENT ERROR] Failed to save SPEEDING event:`, eventErr);
+                                                    }
+                                                } else {
+                                                    console.warn(`[EVENT] SPEEDING detected but no driver assigned to vehicle ${vehicle.id}`);
+                                                }
                                             }
                                         } catch (updateErr: any) {
                                             console.error(`[DEBUG_UPDATE] FAILED for ${imei}:`, updateErr.message);
