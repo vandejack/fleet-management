@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { savePushToken } from '@/lib/actions/notifications';
 import { useSession } from 'next-auth/react';
@@ -37,6 +38,16 @@ export const PushNotificationManager = () => {
                 // Register with FCM
                 await PushNotifications.register();
 
+                // Create a channel for Android 8+ (Oreo)
+                await PushNotifications.createChannel({
+                    id: 'fms_alerts',
+                    name: 'FMS Alerts',
+                    description: 'Speeding and Safety Alerts',
+                    importance: 5,
+                    visibility: 1,
+                    vibration: true,
+                });
+
                 // Listen for successful registration
                 PushNotifications.addListener('registration', (token) => {
                     console.log('Push registration success:', token.value);
@@ -49,8 +60,23 @@ export const PushNotificationManager = () => {
                 });
 
                 // Listen for notifications received
-                PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                PushNotifications.addListener('pushNotificationReceived', async (notification) => {
                     console.log('Push received:', notification);
+                    // Schedule a local notification to show the alert
+                    await LocalNotifications.schedule({
+                        notifications: [
+                            {
+                                title: notification.title || 'New Notification',
+                                body: notification.body || '',
+                                id: new Date().getTime(),
+                                schedule: { at: new Date(Date.now() + 100) },
+                                sound: 'default',
+                                attachments: null,
+                                actionTypeId: '',
+                                extra: null
+                            }
+                        ]
+                    });
                 });
 
                 // Listen for notification actions

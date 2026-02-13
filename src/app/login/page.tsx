@@ -2,13 +2,13 @@
 
 import { useActionState, useEffect } from 'react';
 import { authenticate, LoginState } from './actions';
-import { Cinzel } from 'next/font/google';
+// import { Cinzel } from 'next/font/google'; // Temporarily disabled due to Turbopack issue
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Map from '@/components/Map';
 import { useRouter } from 'next/navigation';
 
-const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
+// const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
 
 const initialState: LoginState = {
   message: undefined,

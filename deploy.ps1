@@ -86,16 +86,35 @@ else
     pm2 save
 fi
 
-echo "✅ Deployment Complete! App running on http://$ServerIP:3000"
+echo "🚀 Starting Teltonika Server..."
+if pm2 list | grep -q "teltonika-server"; then
+    pm2 restart teltonika-server
+else
+    # Run the TS script directly using npx tsx
+    pm2 start npx --name "teltonika-server" -- tsx scripts/teltonika-server.ts
+    pm2 save
+fi
+
+echo "✅ App running on http://$ServerIP:3000"
 "@
 
-# Execute the script remotely via SSH
-# We use -t to force pseudo-terminal allocation so sudo/interactive commands might work better, 
-# though mostly we want non-interactive here.
-# IMPORTANT: Convert Windows CRLF to Unix LF before sending to bash!
+Write-Host "Connecting to server... (You may be asked for your password: r1f4n11991)" -ForegroundColor Yellow
 $RemoteScriptUnix = $RemoteScript.Replace("`r`n", "`n")
 
-Write-Host "Connecting to server... (You may be asked for your password: r1f4n11991)" -ForegroundColor Yellow
-ssh -t $User@$ServerIP "bash -c '$RemoteScriptUnix'"
+# Copy the Firebase service account file
+Write-Host "📤 Uploading firebase-service-account.json..." -ForegroundColor Cyan
 
-Write-Host "🎉 Done." -ForegroundColor Cyan
+# Save the script to a local file for upload (avoiding quoting hell)
+$RemoteScriptPath = "deploy_remote.sh"
+$RemoteScriptUnix | Out-File -FilePath $RemoteScriptPath -Encoding utf8NoBOM
+
+# Copy the Firebase service account file and the script
+Write-Host "📤 Uploading files..." -ForegroundColor Cyan
+$Destination = "$User@$ServerIP" + ":" + "$AppDir/"
+scp firebase-service-account.json $RemoteScriptPath $Destination
+
+# Execute the script
+Write-Host "🚀 Executing remote script..." -ForegroundColor Cyan
+ssh -t $User@$ServerIP "bash $AppDir/deploy_remote.sh"
+
+Write-Host "Done." -ForegroundColor Cyan

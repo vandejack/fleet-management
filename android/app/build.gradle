@@ -4,7 +4,7 @@ android {
     namespace "com.fleet.manager"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.fleet.manager"
+        applicationId "com.aicrone.fms"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

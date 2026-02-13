@@ -420,9 +420,3 @@ export async function getVehicleBehaviorEvents(vehicleId: string) {
         return { success: false, error: 'Failed to fetch behavior events', events: [] };
     }
 }
-
-// FUEL ANALYTICS ACTIONS - Direct exports to avoid Next.js module resolution issues
-export { getFuelAnalytics } from './actions/fuel-analytics';
-export { detectRefuelingEvents } from './actions/fuel-analytics';
-export { calculateFuelEfficiency } from './actions/fuel-analytics';
-export { getDailyConsumptionTrend } from './actions/fuel-analytics';

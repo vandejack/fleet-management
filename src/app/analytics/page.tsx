@@ -6,7 +6,7 @@ import {
   getFuelAnalytics,
   getDailyConsumptionTrend,
   detectRefuelingEvents
-} from '@/lib/actions';
+} from '@/lib/actions/fuel-analytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Fuel, DollarSign, TrendingUp, MapPin, Calendar, Truck, RefreshCw } from 'lucide-react';
 

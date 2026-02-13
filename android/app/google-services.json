@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "236867072449",
+        "project_id": "fleet-management-7c999",
+        "storage_bucket": "fleet-management-7c999.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:236867072449:android:3f68a7b02e95325626ff40",
+                "android_client_info": {
+                    "package_name": "com.aicrone.fms"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyAeNIMCxEozifB0_9-H5Xzn_r5K7FadA7c"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

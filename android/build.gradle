@@ -17,10 +17,30 @@ buildscript {
 
 apply from: "variables.gradle"
 
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+    
+    // Force Java 17 for all modules to match environment
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
     }
 }
 

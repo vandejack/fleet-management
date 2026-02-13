@@ -64,10 +64,12 @@ async function sendSpeedingNotification(vehicle: any, speed: number, timestamp: 
 
     try {
         // Find users for the company to send notifications to
+        console.log(`[PUSH_DEBUG] Finding users for companyId: ${vehicle.companyId}`);
         const users = await prisma.user.findMany({
             where: { companyId: vehicle.companyId },
             include: { pushTokens: true }
         });
+        console.log(`[PUSH_DEBUG] Found ${users.length} users.`);
 
         const allTokens = users.flatMap((u: any) => u.pushTokens.map((t: any) => t.token));
 

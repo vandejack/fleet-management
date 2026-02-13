@@ -2,12 +2,12 @@
 import React from 'react';
 import { Map, BarChart3, History, Settings, ChevronLeft, ChevronRight, User, Truck, LogOut, Wrench, Calendar, BookOpen, Building } from 'lucide-react';
 import Link from 'next/link';
-import { Cinzel } from 'next/font/google';
+// import { Cinzel } from 'next/font/google'; // Temporarily disabled due to Turbopack issue
 import { useSession } from 'next-auth/react';
 import { logout } from '@/app/login/actions';
 import { usePathname } from 'next/navigation';
 
-const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
+// const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
 
 import { ThemeToggle } from './ThemeToggle';
 

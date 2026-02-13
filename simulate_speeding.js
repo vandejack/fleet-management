@@ -2,7 +2,7 @@ const net = require('net');
 
 const HOST = 'localhost';
 const PORT = 7001;
-const IMEI = '351756051523999'; // Use a test IMEI or one from DB
+const IMEI = '123456789012345'; // Assigned to Truck A1
 const SPEED_KMH = 120;
 
 const client = new net.Socket();
