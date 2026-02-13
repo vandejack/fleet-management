@@ -65,7 +65,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
       {/* Mobile Header Logo */}
       {isMobile && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[2000] pointer-events-none transition-opacity duration-300 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none transition-opacity duration-300 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}>
           <img
             src="/aicrone-logo.png"
             alt="AICrone"

@@ -109,7 +109,7 @@ export const AlertsList = ({ alerts, vehicles = [], onDismiss, onClearAll }: Ale
   if (displayAlerts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[3000] w-[340px] max-w-[calc(100vw-2rem)] flex flex-col gap-3 pointer-events-none font-sans">
+    <div className="fixed top-16 md:top-4 left-1/2 -translate-x-1/2 z-[9999] w-[340px] max-w-[calc(100vw-2rem)] flex flex-col gap-3 pointer-events-none font-sans">
       {displayAlerts.map((alert) => {
         const driverName = getDriverName(alert.vehicleId);
         return (
