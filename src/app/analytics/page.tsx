@@ -1,91 +1,77 @@
 'use client';
+
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useFleet } from '@/context/FleetContext';
+import {
+  getFuelAnalytics,
+  getDailyConsumptionTrend,
+  detectRefuelingEvents
+} from '@/lib/actions';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Fuel, DollarSign, TrendingUp, MapPin, Calendar, Truck, Plus, X } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
+import { Fuel, DollarSign, TrendingUp, MapPin, Calendar, Truck, RefreshCw } from 'lucide-react';
 
 export default function AnalyticsPage() {
-  const { vehicles, fuelTransactions, addFuelTransaction } = useFleet();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    vehicleId: '',
-    date: new Date().toISOString().split('T')[0],
-    amount: '',
-    cost: '',
-    location: '',
-    odometer: ''
-  });
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [dailyTrends, setDailyTrends] = useState<any[]>([]);
+  const [refuelings, setRefuelings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Generate analytics data based on actual fleet size
-  const analyticsData = useMemo(() => {
-    const baseConsumption = 25; // Base consumption per vehicle per day
-    const baseCost = 14500; // Cost per liter (Pertamina Dex approx)
+  useEffect(() => {
+    loadData();
 
-    return Array.from({ length: 30 }, (_, i) => {
-      // Add some randomness but scale with vehicle count
-      const dailyFluctuation = Math.random() * 0.4 + 0.8; // 0.8 to 1.2
-      const activeVehicles = vehicles.filter(v => v.status !== 'stopped').length;
-      // Fallback to 1 if no vehicles to show empty state or baseline
-      const vehicleCount = activeVehicles || 1;
+    // Poll every 10 seconds for real-time updates
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
-      const consumption = Math.round(vehicleCount * baseConsumption * dailyFluctuation);
-      const cost = consumption * baseCost;
-      const efficiency = 8 + (Math.random() * 4) - (vehicleCount * 0.1); // Efficiency drops slightly with more fleet complexity? Or just random.
+  async function loadData() {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      return {
-        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        consumption,
-        cost,
-        efficiency
-      };
-    });
-  }, [vehicles]);
+      const [analyticsRes, trendsRes, refuelRes] = await Promise.all([
+        getFuelAnalytics({
+          startDate: thirtyDaysAgo.toISOString(),
+          endDate: new Date().toISOString(),
+        }),
+        getDailyConsumptionTrend({
+          startDate: thirtyDaysAgo.toISOString(),
+          endDate: new Date().toISOString(),
+        }),
+        detectRefuelingEvents('all', 30),
+      ]);
 
-  // Generate recent individual fuel transactions
-  const recentTransactions = useMemo(() => {
-    return fuelTransactions.map(t => {
-      const vehicle = vehicles.find(v => v.id === t.vehicleId);
-      return {
-        ...t,
-        vehicleName: vehicle?.name || 'Unknown Vehicle',
-        plate: vehicle?.plate || 'Unknown Plate'
-      };
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [fuelTransactions, vehicles]);
+      if (analyticsRes.success) {
+        setAnalytics(analyticsRes);
+      }
+      if (trendsRes.success) {
+        setDailyTrends(trendsRes.dailyTrends || []);
+      }
+      if (refuelRes.success) {
+        setRefuelings(refuelRes.refuelings || []);
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.vehicleId) return;
+      setLastUpdate(new Date());
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load fuel analytics:', error);
+      setLoading(false);
+    }
+  }
 
-    addFuelTransaction({
-      vehicleId: formData.vehicleId,
-      date: formData.date,
-      amount: Number(formData.amount),
-      cost: Number(formData.cost),
-      location: formData.location,
-      odometer: formData.odometer ? Number(formData.odometer) : undefined
-    });
-
-    setIsModalOpen(false);
-    setFormData({
-      vehicleId: '',
-      date: new Date().toISOString().split('T')[0],
-      amount: '',
-      cost: '',
-      location: '',
-      odometer: ''
-    });
+  const summary = analytics?.summary || {
+    totalDistance: 0,
+    totalFuelConsumed: 0,
+    totalCost: 0,
+    averageEfficiency: 0,
+    totalRefuelings: 0,
   };
-
-  const totalConsumption = analyticsData.reduce((acc, curr) => acc + curr.consumption, 0);
-  const totalCost = analyticsData.reduce((acc, curr) => acc + curr.cost, 0);
-  const avgEfficiency = (analyticsData.reduce((acc, curr) => acc + curr.efficiency, 0) / analyticsData.length).toFixed(1);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -98,7 +84,9 @@ export default function AnalyticsPage() {
               <span className="text-slate-600 dark:text-slate-300">
                 {entry.name}: <span className="text-slate-900 dark:text-white font-bold">{
                   typeof entry.value === 'number'
-                    ? (entry.name.includes('Cost') ? `Rp ${entry.value.toLocaleString('id-ID')}` : entry.value.toLocaleString())
+                    ? (entry.name.includes('Cost') || entry.name.includes('Rp')
+                      ? `Rp ${entry.value.toLocaleString('id-ID')}`
+                      : entry.value.toLocaleString())
                     : entry.value
                 }</span>
               </span>
@@ -110,36 +98,44 @@ export default function AnalyticsPage() {
     return null;
   };
 
+  if (loading && !analytics) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <RefreshCw className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <p className="text-slate-600 dark:text-slate-400">Loading fuel analytics from GPS data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-8 pt-16 md:pt-8 pb-24 md:pb-8">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
           <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Fuel Analytics</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Fuel & Analytics</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Automatic tracking from GPS data
+              {lastUpdate && (
+                <span className="ml-2">• Last update: {lastUpdate.toLocaleTimeString()}</span>
+              )}
+            </p>
           </div>
 
-          {/* Desktop Add Button */}
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={loadData}
             className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
-            <Plus size={20} />
-            Add Fuel Record
+            <RefreshCw size={20} />
+            Refresh
           </button>
         </div>
 
-        {/* Mobile Floating Add Button */}
-        <div className="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-[900]">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
-          >
-            <Plus size={20} />
-            Add Fuel Record
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-600 dark:text-orange-400">
@@ -147,8 +143,10 @@ export default function AnalyticsPage() {
               </div>
               <h3 className="text-gray-500 dark:text-gray-400 font-medium">Total Consumption</h3>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white">{totalConsumption.toLocaleString()} L</p>
-            <p className="text-sm text-green-600 dark:text-green-400 mt-2">Last 30 days ({vehicles.length} vehicles)</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              {summary.totalFuelConsumed.toFixed(1)} L
+            </p>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">Last 30 days</p>
           </div>
 
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -158,8 +156,10 @@ export default function AnalyticsPage() {
               </div>
               <h3 className="text-gray-500 dark:text-gray-400 font-medium">Est. Fuel Cost</h3>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white">Rp {totalCost.toLocaleString('id-ID')}</p>
-            <p className="text-sm text-green-600 dark:text-green-400 mt-2">Based on current fleet</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              Rp {summary.totalCost.toLocaleString('id-ID')}
+            </p>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">Based on GPS data</p>
           </div>
 
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -169,18 +169,34 @@ export default function AnalyticsPage() {
               </div>
               <h3 className="text-gray-500 dark:text-gray-400 font-medium">Avg Efficiency</h3>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white">{avgEfficiency} km/L</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              {summary.averageEfficiency.toFixed(1)} km/L
+            </p>
             <p className="text-sm text-green-600 dark:text-green-400 mt-2">Fleet Average</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full text-purple-600 dark:text-purple-400">
+                <Truck size={24} />
+              </div>
+              <h3 className="text-gray-500 dark:text-gray-400 font-medium">Distance</h3>
+            </div>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              {summary.totalDistance.toFixed(0)} km
+            </p>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">Total traveled</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">Daily Consumption Trend</h3>
             <div className="h-[300px]">
-              {isMounted ? (
+              {isMounted && dailyTrends.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analyticsData}>
+                  <BarChart data={dailyTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
                     <XAxis
                       dataKey="date"
@@ -195,8 +211,8 @@ export default function AnalyticsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
-                  Initializing Chart...
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                  {isMounted ? 'No data available' : 'Loading chart...'}
                 </div>
               )}
             </div>
@@ -205,9 +221,9 @@ export default function AnalyticsPage() {
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">Cost vs Efficiency</h3>
             <div className="h-[300px] w-full min-h-[300px]">
-              {isMounted ? (
+              {isMounted && dailyTrends.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={analyticsData}>
+                  <LineChart data={dailyTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
                     <XAxis
                       dataKey="date"
@@ -223,69 +239,71 @@ export default function AnalyticsPage() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
-                  Initializing Chart...
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                  {isMounted ? 'No data available' : 'Loading chart...'}
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Recent Fuel Records Table */}
-        <div className="mt-8 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        {/* Refueling Events Table */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Recent Fuel Records</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              Auto-Detected Refueling Events
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Automatically detected from GPS fuel level increases
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Date</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Date & Time</th>
                   <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Vehicle</th>
                   <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Location</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Amount</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Cost</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Fuel Added</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Odometer</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                {recentTransactions.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                {refuelings.map((event, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Calendar size={16} className="text-slate-400" />
-                        {record.date}
+                        {new Date(event.timestamp).toLocaleString('id-ID')}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
-                          <Truck size={16} className="text-blue-500" />
-                          {record.vehicleName}
-                        </p>
-                        <p className="text-xs text-slate-500 ml-6">{record.plate}</p>
+                      <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                        <Truck size={16} className="text-blue-500" />
+                        {event.vehicleName}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <MapPin size={16} className="text-red-400" />
-                        {record.location}
+                        {event.location.lat.toFixed(4)}, {event.location.lng.toFixed(4)}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-white">
                         <Fuel size={16} className="text-orange-500" />
-                        {record.amount} L
+                        ~{event.fuelAdded.toFixed(1)}%
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                      Rp {record.cost.toLocaleString('id-ID')}
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {event.odometer ? `${event.odometer.toFixed(0)} km` : 'N/A'}
                     </td>
                   </tr>
                 ))}
-                {recentTransactions.length === 0 && (
+                {refuelings.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
-                      No fuel records found
+                      No refueling events detected in the last 30 days
                     </td>
                   </tr>
                 )}
