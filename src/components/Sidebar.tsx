@@ -1,15 +1,10 @@
 'use client';
-import React from 'react';
-import { Map, BarChart3, History, Settings, ChevronLeft, ChevronRight, User, Truck, LogOut, Wrench, Calendar, BookOpen, Building } from 'lucide-react';
+import React, { useState } from 'react';
+import { Map, BarChart3, History, Settings, ChevronLeft, ChevronRight, User, Truck, LogOut, Wrench, Calendar, BookOpen, Building, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-// import { Cinzel } from 'next/font/google'; // Temporarily disabled due to Turbopack issue
 import { useSession } from 'next-auth/react';
 import { logout } from '@/app/login/actions';
 import { usePathname } from 'next/navigation';
-
-// const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'] });
-
-import { ThemeToggle } from './ThemeToggle';
 
 type PanelType = 'vehicles' | 'analytics' | 'history' | 'settings' | 'drivers' | 'maintenance' | 'schedule' | 'routes' | null;
 
@@ -29,10 +24,11 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
   const pathname = usePathname();
   const isMapPage = pathname === '/';
   const isMobile = useMobile();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleItemClick = (panel: PanelType, href: string) => (e: React.MouseEvent) => {
     if (isMobile && settings.themeMode === 'modern') {
-      onToggle(); // Close sidebar on mobile item click
+      onToggle();
     }
     if (isMapPage && onMenuClick) {
       e.preventDefault();
@@ -40,16 +36,14 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
     }
   };
 
-  // Modern Theme Mobile Drawer Styles
   const isModernMobile = isMobile && settings.themeMode === 'modern';
 
   const drawerClasses = isModernMobile
     ? `fixed inset-y-0 left-0 z-[2001] w-64 bg-slate-900/95 backdrop-blur-xl border-r border-white/10 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
-    : `hidden md:flex w-64 floating-panel text-white flex-col p-4 z-[2000] transition-transform duration-300 ease-in-out print:hidden translate-x-0 bg-slate-900/40 backdrop-blur-lg rounded-lg shadow-lg pointer-events-auto gap-4 border border-white/10 transition-colors flex-shrink-0 md:w-auto h-full ${isMapPage ? '' : 'fixed left-0 top-0 border-r border-white/10 rounded-none h-screen'}`;
+    : `hidden md:flex fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} text-white flex-col p-4 z-[2000] bg-slate-900/40 backdrop-blur-lg border-r border-white/10 print:hidden transition-all duration-300`;
 
   return (
     <>
-      {/* Backdrop for mobile */}
       {isModernMobile && isOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000]"
@@ -57,102 +51,144 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
         />
       )}
       <div className={drawerClasses}>
-        <div className="border-b border-white/10 pt-4 pb-4 bg-slate-900/0 mb-4 flex flex-col items-center justify-center gap-2">
-          <img
-            src="/aicrone-logo.png"
-            alt="AICrone Logo"
-            className="h-5 w-auto object-contain brightness-0 invert"
-            width={25}
-          />
+        {/* Header with Logo and Toggle */}
+        <div className="border-b border-white/10 pt-4 pb-4 bg-slate-900/0 mb-4 flex flex-col items-center justify-center gap-2 relative">
+          {isCollapsed ? (
+            <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              AI
+            </div>
+          ) : (
+            <img
+              src="/aicrone-logo.png"
+              alt="AICrone Logo"
+              className="h-5 w-auto object-contain brightness-0 invert"
+              width={25}
+            />
+          )}
+
+          {/* Toggle Button */}
+          {!isMobile && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-full flex items-center justify-center transition-colors"
+            >
+              {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
+          )}
         </div>
-        <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto sidebar-scroll py-2 pr-2">
           <nav className="flex flex-col gap-2">
             <Link
               href="/"
               onClick={handleItemClick(null, '/')}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activePanel === null && isMapPage ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${activePanel === null && isMapPage ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Live Tracking' : ''}
             >
               <Map size={20} />
-              <span>Live Tracking</span>
+              {!isCollapsed && <span>Live Tracking</span>}
             </Link>
             <Link
               href="/analytics"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/analytics' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/analytics' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Fuel & Analytics' : ''}
             >
               <BarChart3 size={20} />
-              <span>Fuel & Analytics</span>
+              {!isCollapsed && <span>Fuel & Analytics</span>}
             </Link>
             <Link
               href="/replay"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/replay' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/replay' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Route Replay' : ''}
             >
               <History size={20} />
-              <span>Route Replay</span>
+              {!isCollapsed && <span>Route Replay</span>}
             </Link>
             <Link
               href="/drivers"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/drivers' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/drivers' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Drivers' : ''}
             >
               <User size={20} />
-              <span>Drivers</span>
+              {!isCollapsed && <span>Drivers</span>}
             </Link>
             <Link
               href="/vehicles"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/vehicles' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/vehicles' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Vehicles' : ''}
             >
               <Truck size={20} />
-              <span>Vehicles</span>
+              {!isCollapsed && <span>Vehicles</span>}
+            </Link>
+            <Link
+              href="/driver-behavior"
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/driver-behavior' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
+                }`}
+              title={isCollapsed ? 'Driver Behavior' : ''}
+            >
+              <AlertTriangle size={20} />
+              {!isCollapsed && <span>Driver Behavior</span>}
             </Link>
             <Link
               href="/maintenance"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/maintenance' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/maintenance' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Maintenance' : ''}
             >
               <Wrench size={20} />
-              <span>Maintenance</span>
+              {!isCollapsed && <span>Maintenance</span>}
             </Link>
             <Link
               href="/calendar"
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${pathname === '/calendar' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${pathname === '/calendar' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
                 }`}
+              title={isCollapsed ? 'Schedule' : ''}
             >
               <Calendar size={20} />
-              <span>Schedule</span>
+              {!isCollapsed && <span>Schedule</span>}
             </Link>
-            <Link href="/sop" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg transition-colors md:hidden">
+            <Link
+              href="/sop"
+              className={`flex items-center ${isCollapsed ? 'justify-center md:hidden' : 'gap-3'} p-3 hover:bg-slate-800 rounded-lg transition-colors md:hidden`}
+              title={isCollapsed ? 'SOP / Guide' : ''}
+            >
               <BookOpen size={20} />
-              <span>SOP / Guide</span>
+              {!isCollapsed && <span>SOP / Guide</span>}
             </Link>
           </nav>
         </div>
 
+        {/* Bottom Section */}
         <div className="border-t border-white/10 pt-4 space-y-2 bg-slate-900/0">
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Link
-              href="/settings"
-              onClick={handleItemClick('settings', '/settings')}
-              className={`flex-1 flex items-center gap-3 p-2 rounded-lg transition-colors ${activePanel === 'settings' ? 'bg-blue-600/30 text-blue-400 border border-blue-500/30' : 'hover:bg-slate-800'
-                }`}
-            >
-              <Settings size={20} />
-              <span>Settings</span>
-            </Link>
-          </div>
+          <Link
+            href="/settings"
+            onClick={handleItemClick('settings', '/settings')}
+            className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg transition-colors ${activePanel === 'settings' ? 'bg-blue-600 text-white border border-blue-500' : 'hover:bg-slate-800 text-white'
+              }`}
+            title={isCollapsed ? 'Settings' : ''}
+          >
+            <Settings size={20} />
+            {!isCollapsed && <span>Settings</span>}
+          </Link>
 
           {(session?.user as any)?.role === 'superadmin' && (
-            <Link href="/companies" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg transition-colors text-cyan-400">
+            <Link
+              href="/companies"
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 hover:bg-slate-800 rounded-lg transition-colors text-cyan-400`}
+              title={isCollapsed ? 'Companies' : ''}
+            >
               <Building size={20} />
-              <span>Companies</span>
+              {!isCollapsed && <span>Companies</span>}
             </Link>
           )}
 
-          {session?.user && (
+          {session?.user && !isCollapsed && (
             <div className="bg-slate-800/50 rounded-lg p-3">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold shadow-lg text-white">
@@ -171,6 +207,16 @@ export const Sidebar = ({ isOpen, onToggle, onMenuClick, activePanel }: SidebarP
                 Sign Out
               </button>
             </div>
+          )}
+
+          {session?.user && isCollapsed && (
+            <button
+              onClick={() => logout()}
+              className="w-full flex items-center justify-center p-3 hover:bg-slate-800 rounded-lg transition-colors text-red-400"
+              title="Sign Out"
+            >
+              <LogOut size={20} />
+            </button>
           )}
         </div>
       </div>

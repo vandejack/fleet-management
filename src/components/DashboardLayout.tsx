@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
+import { ThemeToggle } from './ThemeToggle';
 import { BookOpen, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -135,6 +136,13 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           onMenuClick={handleMenuClick}
           activePanel={activePanel}
         />
+      )}
+
+      {/* Floating Theme Toggle (Hidden on Mobile) */}
+      {!isMobile && (
+        <div className="fixed top-6 right-6 z-[2000] print:hidden">
+          <ThemeToggle minimal={true} />
+        </div>
       )}
 
       {/* Floating SOP Button (Hidden on Mobile) */}

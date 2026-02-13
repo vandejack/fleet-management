@@ -1,13 +1,14 @@
 'use client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
-import { Bell, Globe, Save, Shield, LogOut } from 'lucide-react';
+import { Bell, Globe, Save, Shield, LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { getCurrentPosition, watchPosition } from '@/lib/location';
 import { checkBiometricAvailability, authenticateWithBiometrics } from '@/lib/biometrics';
 import { MapPin, Fingerprint } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { useTheme } from 'next-themes';
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useFleet();
@@ -170,6 +171,14 @@ export default function SettingsPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Theme Mode</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Choose your preferred color scheme</p>
+                </div>
+                <ThemeModeSelector />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="font-medium text-slate-900 dark:text-white">Measurement Units</p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">Choose your preferred unit system</p>
                 </div>
@@ -317,5 +326,47 @@ export default function SettingsPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Theme Mode Selector Component
+function ThemeModeSelector() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 opacity-50">
+        <div className="px-3 py-1.5 text-sm font-medium">Loading...</div>
+      </div>
+    );
+  }
+
+  const themeOptions = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+  ];
+
+  return (
+    <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 gap-1">
+      {themeOptions.map(({ value, label, icon: Icon }) => (
+        <button
+          key={value}
+          onClick={() => setTheme(value)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${theme === value
+            ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+        >
+          <Icon size={16} />
+          <span className="hidden sm:inline">{label}</span>
+        </button>
+      ))}
+    </div>
   );
 }

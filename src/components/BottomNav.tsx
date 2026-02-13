@@ -17,15 +17,15 @@ export const BottomNav = () => {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 z-[1000] pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10 z-[1000] pb-safe">
             <div className="flex justify-around items-center h-16">
                 {navItems.map(({ href, icon: Icon, label }) => (
                     <Link
                         key={href}
                         href={href}
                         className={`flex flex-col items-center justify-center w-full h-full transition-colors ${isActive(href)
-                            ? 'text-cyan-400'
-                            : 'text-slate-400 hover:text-slate-200'
+                            ? 'text-cyan-600 dark:text-cyan-400'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}
                     >
                         <Icon size={24} strokeWidth={isActive(href) ? 2.5 : 2} />

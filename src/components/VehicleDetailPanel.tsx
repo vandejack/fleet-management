@@ -80,8 +80,8 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
         <div className={`fixed inset-x-0 bottom-0 md:inset-x-auto md:right-4 md:top-4 md:bottom-auto md:h-[calc(100vh-32px)] md:w-96 
             transition-transform duration-300 ease-in-out print:hidden 
-            bg-slate-900/95 backdrop-blur-xl md:rounded-2xl rounded-t-2xl shadow-2xl z-[5000] 
-            overflow-y-auto border-t md:border border-white/10 
+            bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl md:rounded-2xl rounded-t-2xl shadow-2xl z-[5000] 
+            overflow-y-auto border-t md:border border-slate-200 dark:border-white/10 
             pb-safe
             ${vehicle ? 'translate-y-0 md:translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-[120%]'}`}
           style={{ maxHeight: '85vh' }}
@@ -92,15 +92,15 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
               <div className="w-12 h-1.5 bg-slate-700/50 rounded-full" />
             </div>
 
-            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl z-10 px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-10 px-6 py-4 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   {vehicle?.plate}
                   <span className={`w-2 h-2 rounded-full ${vehicle?.status === 'moving' ? 'bg-green-500 box-shadow-glow-green' : vehicle?.status === 'idle' ? 'bg-yellow-500' : 'bg-red-500'}`} />
                 </h2>
-                <p className="text-xs text-slate-400">{vehicle?.name}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">{vehicle?.name}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white">
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <X size={20} />
               </button>
             </div>
@@ -108,44 +108,44 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
             <div className="p-6 space-y-6">
               {/* Primary Stats Grid */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
-                  <span className="text-xs text-slate-400 mb-1">Speed</span>
-                  <span className="text-lg font-bold text-white font-mono">{Math.round(vehicle?.speed || 0)}</span>
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-600 dark:text-slate-400 mb-1">Speed</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">{Math.round(vehicle?.speed || 0)}</span>
                   <span className="text-[10px] text-slate-500">km/h</span>
                 </div>
-                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
-                  <span className="text-xs text-slate-400 mb-1">Fuel</span>
-                  <span className={`text-lg font-bold font-mono ${vehicle?.fuelLevel && vehicle.fuelLevel < 20 ? 'text-red-400' : 'text-white'}`}>
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-600 dark:text-slate-400 mb-1">Fuel</span>
+                  <span className={`text-lg font-bold font-mono ${vehicle?.fuelLevel && vehicle.fuelLevel < 20 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
                     {Math.round(vehicle?.fuelLevel || 0)}
                   </span>
                   <span className="text-[10px] text-slate-500">%</span>
                 </div>
-                <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
-                  <span className="text-xs text-slate-400 mb-1">Ignition</span>
-                  <div className={`mt-1 w-8 h-4 rounded-full flex items-center px-1 ${vehicle?.ignition ? 'bg-green-500/20 justify-end' : 'bg-slate-700 justify-start'}`}>
-                    <div className={`w-3 h-3 rounded-full ${vehicle?.ignition ? 'bg-green-500' : 'bg-slate-400'}`} />
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs text-slate-600 dark:text-slate-400 mb-1">Ignition</span>
+                  <div className={`mt-1 w-8 h-4 rounded-full flex items-center px-1 ${vehicle?.ignition ? 'bg-green-500/20 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'}`}>
+                    <div className={`w-3 h-3 rounded-full ${vehicle?.ignition ? 'bg-green-500' : 'bg-slate-500 dark:bg-slate-400'}`} />
                   </div>
                 </div>
               </div>
 
               {/* Driver & Location */}
-              <div className="bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
-                <div className="p-3 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+                <div className="p-3 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-400 font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-600/20 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs">
                       {vehicle?.driver?.name.charAt(0)}
                     </div>
-                    <div className="text-sm text-slate-300">
+                    <div className="text-sm text-slate-900 dark:text-slate-300">
                       {vehicle?.driver?.name || 'Unassigned'}
                     </div>
                   </div>
-                  <a href={`tel:${vehicle?.driver?.phone}`} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors">
+                  <a href={`tel:${vehicle?.driver?.phone}`} className="p-2 bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-500 rounded-lg hover:bg-green-200 dark:hover:bg-green-500/20 transition-colors">
                     <Phone size={16} />
                   </a>
                 </div>
-                <div className="p-3 bg-black/20">
+                <div className="p-3 bg-slate-100 dark:bg-black/20">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Last Update</p>
-                  <p className="text-xs text-slate-300 font-mono">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
                     {vehicle?.lastLocationTime ? new Date(vehicle.lastLocationTime).toLocaleString() : 'N/A'}
                   </p>
                 </div>
@@ -153,37 +153,37 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
               {/* Collapsible Sections or just list for now in modern view */}
               <div className="space-y-1">
-                <details className="group bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
-                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors">
-                    <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                      <Gauge size={16} className="text-cyan-400" /> Telemetry Details
+                <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-2">
+                      <Gauge size={16} className="text-cyan-600 dark:text-cyan-400" /> Telemetry Details
                     </span>
                     <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
                   </summary>
-                  <div className="p-3 pt-0 border-t border-white/5 bg-black/10 grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded bg-white/5 flex justify-between">
-                      <span className="text-slate-500">Odometer</span>
-                      <span className="text-slate-300 font-mono">{vehicle?.odometer?.toFixed(0)} km</span>
+                  <div className="p-3 pt-0 border-t border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/10 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Odometer</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-mono">{vehicle?.odometer?.toFixed(0)} km</span>
                     </div>
-                    <div className="p-2 rounded bg-white/5 flex justify-between">
-                      <span className="text-slate-500">Eng. Hours</span>
-                      <span className="text-slate-300 font-mono">{vehicle?.engineHours?.toFixed(1)} h</span>
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Eng. Hours</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-mono">{vehicle?.engineHours?.toFixed(1)} h</span>
                     </div>
-                    <div className="p-2 rounded bg-white/5 flex justify-between">
-                      <span className="text-slate-500">Ext. Batt</span>
-                      <span className="text-slate-300 font-mono">{(vehicle?.vehicleBattery || 0) / 1000} V</span>
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Ext. Batt</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-mono">{(vehicle?.vehicleBattery || 0) / 1000} V</span>
                     </div>
-                    <div className="p-2 rounded bg-white/5 flex justify-between">
-                      <span className="text-slate-500">Int. Batt</span>
-                      <span className="text-slate-300 font-mono">{(vehicle?.internalBattery || 0) / 1000} V</span>
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Int. Batt</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-mono">{(vehicle?.internalBattery || 0) / 1000} V</span>
                     </div>
                   </div>
                 </details>
 
-                <details className="group bg-slate-800/30 rounded-xl border border-white/5 overflow-hidden">
-                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors">
-                    <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                      <EyeOff size={16} className="text-orange-400" /> Fatigue Events
+                <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-2">
+                      <EyeOff size={16} className="text-orange-600 dark:text-orange-400" /> Fatigue Events
                     </span>
                     <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
                   </summary>
@@ -191,21 +191,21 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                     {loading && behaviorEvents.length === 0 ? (
                       <div className="p-4 text-center text-slate-500 text-xs italic">Loading...</div>
                     ) : behaviorEvents.length > 0 ? (
-                      <div className="divide-y divide-white/5">
+                      <div className="divide-y divide-slate-200 dark:divide-white/5">
                         {behaviorEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="p-3 hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-between"
+                            className="p-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-between"
                             onClick={() => event.evidenceUrl && setSelectedEvent(event)}
                           >
                             <div className="flex items-center gap-2">
                               {getEventIcon(event.type)}
                               <div>
-                                <p className="text-xs text-slate-300 font-medium">{getEventLabel(event.type)}</p>
+                                <p className="text-xs text-slate-900 dark:text-slate-300 font-medium">{getEventLabel(event.type)}</p>
                                 <p className="text-[10px] text-slate-500">{new Date(event.timestamp).toLocaleTimeString()}</p>
                               </div>
                             </div>
-                            {event.evidenceUrl && <div className="text-[9px] bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded">IMG</div>}
+                            {event.evidenceUrl && <div className="text-[9px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">IMG</div>}
                           </div>
                         ))}
                       </div>
@@ -223,7 +223,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                 >
                   View History
                 </button>
-                <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl py-3 text-sm font-medium border border-white/10 transition-all">
+                <button className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl py-3 text-sm font-medium border border-slate-300 dark:border-white/10 transition-all">
                   More Details
                 </button>
               </div>

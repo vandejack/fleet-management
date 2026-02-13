@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { getSystemSettings, updateSystemSetting } from '@/lib/actions/settings';
@@ -185,6 +185,13 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
   const { data: session, status } = useSession();
   const pathname = usePathname();
 
+  // Auto-close vehicle detail panel when navigating away from map page
+  useEffect(() => {
+    if (pathname !== '/') {
+      setSelectedVehicle(null);
+    }
+  }, [pathname]);
+
   // LIVE TRACKING POLLING
   useEffect(() => {
     if (status !== 'authenticated' || pathname === '/login') return;
@@ -363,13 +370,13 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     }
   };
 
-  const dismissAlert = (id: string) => {
+  const dismissAlert = useCallback((id: string) => {
     setAlerts(prev => prev.filter(a => a.id !== id));
-  };
+  }, []);
 
-  const clearAllAlerts = () => {
+  const clearAllAlerts = useCallback(() => {
     setAlerts([]);
-  };
+  }, []);
 
   // Load settings from localStorage and Database
   useEffect(() => {

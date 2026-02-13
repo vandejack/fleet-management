@@ -43,7 +43,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
           <Providers session={session} initialVehicles={vehicles} initialDrivers={drivers} initialMaintenance={maintenance}>
             {children}
           </Providers>
