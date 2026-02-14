@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Map, BarChart3, Users, Truck, Settings } from 'lucide-react';
+import { Map, BarChart3, Users, Truck, Settings, AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -12,9 +12,10 @@ export const BottomNav = () => {
 
     const navItems = [
         { href: '/drivers', icon: Users, label: 'Drivers' },
-        { href: '/analytics', icon: BarChart3, label: 'Stats' },
-        { href: '/', icon: Map, label: 'Map' },
         { href: '/vehicles', icon: Truck, label: 'Vehicles' },
+        { href: '/driver-behavior', icon: AlertTriangle, label: 'Safety' },
+        { href: '/', icon: Map, label: 'Map' },
+        { href: '/analytics', icon: BarChart3, label: 'Stats' },
         { href: '/settings', icon: Settings, label: 'Settings' },
     ];
 
@@ -57,7 +58,7 @@ export const BottomNav = () => {
                             {/* Icon Container - Minimalist look */}
                             <div className={`relative transition-all duration-300 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}>
                                 <Icon
-                                    size={22}
+                                    size={20}
                                     strokeWidth={active ? 2.5 : 2}
                                     className={`transition-all duration-300 ${active ? 'scale-110' : 'scale-100'}`}
                                 />

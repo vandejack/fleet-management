@@ -108,7 +108,7 @@ export default function DriverBehaviorPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-4 md:p-8 max-w-7xl mx-auto pt-16 md:pt-8 pb-24 md:pb-8">
+            <div className="p-4 md:p-8 pt-16 md:pt-8 pb-24 md:pb-8">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
                     <div>

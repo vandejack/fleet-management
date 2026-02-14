@@ -208,22 +208,22 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                 <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
                   <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                     <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-3">
-                      <EyeOff size={16} className="text-orange-600 dark:text-orange-400" /> Fatigue Events
+                      <EyeOff size={16} className="text-orange-600 dark:text-orange-400" /> Driver Behavior Events
                     </span>
                     <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
                   </summary>
-                  <div className="max-h-48 overflow-y-auto p-0">
+                  <div className="max-h-64 overflow-y-auto p-3 pt-3 border-t border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/10">
                     {loading && behaviorEvents.length === 0 ? (
                       <div className="p-4 text-center text-slate-500 text-xs italic">Loading...</div>
                     ) : behaviorEvents.length > 0 ? (
-                      <div className="divide-y divide-slate-200 dark:divide-white/5">
+                      <div className="space-y-2">
                         {behaviorEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="p-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-between"
+                            className="p-3 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-between"
                             onClick={() => event.evidenceUrl && setSelectedEvent(event)}
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               {getEventIcon(event.type)}
                               <div>
                                 <p className="text-xs text-slate-900 dark:text-slate-300 font-medium">{getEventLabel(event.type)}</p>
@@ -498,19 +498,19 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
           <div>
             <h4 className="font-bold mb-3 flex items-center gap-3 dark:text-white">
               <EyeOff size={18} />
-              Fatigue Monitor (Movon)
+              Driver Behavior Events
             </h4>
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-inner">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3 shadow-inner">
               {loading && behaviorEvents.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm italic">
                   Loading events...
                 </div>
               ) : behaviorEvents.length > 0 ? (
-                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                <div className="space-y-2">
                   {behaviorEvents.map((event) => (
                     <div
                       key={event.id}
-                      className={`p-3 transition-colors ${event.evidenceUrl ? 'cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                      className={`p-3 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors ${event.evidenceUrl ? 'cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                       onClick={() => event.evidenceUrl && setSelectedEvent(event)}
                     >
                       <div className="flex justify-between items-start mb-1">
@@ -539,10 +539,10 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center bg-gray-50/50 dark:bg-slate-900/50">
+                <div className="p-4 text-center">
                   <div className="flex flex-col items-center gap-2 text-gray-400" >
                     <AlertCircle size={32} className="opacity-20" />
-                    <p className="text-xs" > No fatigue events detected recently.</p>
+                    <p className="text-xs" > No behavior events detected recently.</p>
                   </div>
                 </div>
               )}
