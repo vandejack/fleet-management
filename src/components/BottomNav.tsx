@@ -31,7 +31,7 @@ export const BottomNav = () => {
 
     return (
         <div
-            className="fixed bottom-0 left-0 right-0 z-[1000] pb-safe bg-white/[0.05] dark:bg-slate-900/[0.05] border-t border-white/20 dark:border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.1)] print:hidden"
+            className="fixed bottom-0 left-0 right-0 z-[1000] pb-safe bg-white/[0.5] dark:bg-slate-900/[0.5] border-t border-white/20 dark:border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.1)] print:hidden"
             style={{
                 backdropFilter: 'blur(10px) saturate(100%)',
                 WebkitBackdropFilter: 'blur(10px) saturate(100%)'
