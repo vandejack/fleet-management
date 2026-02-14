@@ -38,6 +38,9 @@ function mapDbDriverToInterface(dbDriver: any): Driver {
         joinedDate: dbDriver.joinedDate.toISOString(),
         totalTrips: dbDriver.totalTrips,
         photoUrl: dbDriver.photoUrl || undefined,
+        lastActivity: dbDriver.lastActivity ? dbDriver.lastActivity.toISOString() : undefined,
+        complianceStatus: dbDriver.complianceStatus as 'compliant' | 'warning' | 'non_compliant',
+        licenseExpiryDate: dbDriver.licenseExpiryDate.toISOString(),
     };
 }
 

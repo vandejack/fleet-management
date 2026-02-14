@@ -59,6 +59,9 @@ model Driver {
   rating        Float
   joinedDate    DateTime
   totalTrips    Int       @default(0)
+  lastActivity  DateTime?
+  complianceStatus String @default("compliant") // 'compliant' | 'warning' | 'non_compliant'
+  licenseExpiryDate DateTime
   vehicles      Vehicle[]
   behaviorEvents DriverBehaviorEvent[]
   companyId     String?

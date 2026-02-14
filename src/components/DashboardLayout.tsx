@@ -162,7 +162,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         className={`${isMapPage ? 'w-full h-full' : 'flex-1 min-h-0 relative flex flex-col'} transition-all duration-300 z-10 print:ml-0 print:h-auto print:overflow-visible 
           ${!isMobile && isSidebarOpen && !isMapPage ? 'ml-64' : 'ml-0'} 
           ${isMapPage ? 'overflow-hidden' : 'overflow-y-auto'}
-          ${isMobile ? 'pb-16' : ''} 
+          ${isMobile ? '' : ''} 
         `}
       >
         {children}

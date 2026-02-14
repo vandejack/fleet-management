@@ -14,6 +14,9 @@ export interface Driver {
   rating: number;
   joinedDate: string;
   totalTrips: number;
+  lastActivity?: string; // ISO date string
+  complianceStatus: 'compliant' | 'warning' | 'non_compliant';
+  licenseExpiryDate: string; // ISO date string
 }
 
 export interface Vehicle {
@@ -128,7 +131,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.8,
     joinedDate: '2020-03-15',
-    totalTrips: 1250
+    totalTrips: 1250,
+    lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2026-03-15'
   },
   {
     id: 'd2',
@@ -138,7 +144,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.5,
     joinedDate: '2021-06-10',
-    totalTrips: 850
+    totalTrips: 850,
+    lastActivity: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2027-06-10'
   },
   {
     id: 'd3',
@@ -148,7 +157,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.9,
     joinedDate: '2019-11-20',
-    totalTrips: 2100
+    totalTrips: 2100,
+    lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2025-11-20'
   },
   {
     id: 'd4',
@@ -158,7 +170,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'off_duty',
     rating: 4.7,
     joinedDate: '2022-01-05',
-    totalTrips: 420
+    totalTrips: 420,
+    lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    complianceStatus: 'warning',
+    licenseExpiryDate: '2025-01-05'
   },
   {
     id: 'd5',
@@ -168,7 +183,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'on_leave',
     rating: 4.6,
     joinedDate: '2023-04-12',
-    totalTrips: 150
+    totalTrips: 150,
+    lastActivity: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2028-04-12'
   },
   {
     id: 'd6',
@@ -178,7 +196,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.9,
     joinedDate: '2019-08-17',
-    totalTrips: 3200
+    totalTrips: 3200,
+    lastActivity: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2025-08-17'
   },
   {
     id: 'd7',
@@ -188,7 +209,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.7,
     joinedDate: '2021-02-20',
-    totalTrips: 980
+    totalTrips: 980,
+    lastActivity: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2026-02-20'
   },
   {
     id: 'd8',
@@ -198,7 +222,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.5,
     joinedDate: '2020-11-10',
-    totalTrips: 1500
+    totalTrips: 1500,
+    lastActivity: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    complianceStatus: 'warning',
+    licenseExpiryDate: '2024-11-10' // Expiring soon
   },
   {
     id: 'd9',
@@ -208,7 +235,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'off_duty',
     rating: 4.8,
     joinedDate: '2022-05-05',
-    totalTrips: 600
+    totalTrips: 600,
+    lastActivity: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2027-05-05'
   },
   {
     id: 'd10',
@@ -218,7 +248,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.6,
     joinedDate: '2021-09-09',
-    totalTrips: 1100
+    totalTrips: 1100,
+    lastActivity: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2026-09-09'
   },
   {
     id: 'd11',
@@ -228,7 +261,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.7,
     joinedDate: '2020-01-01',
-    totalTrips: 1800
+    totalTrips: 1800,
+    lastActivity: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
+    complianceStatus: 'non_compliant',
+    licenseExpiryDate: '2024-01-01' // Expired
   },
   {
     id: 'd12',
@@ -238,7 +274,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 5.0,
     joinedDate: '2018-12-12',
-    totalTrips: 4500
+    totalTrips: 4500,
+    lastActivity: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2025-12-12'
   },
   {
     id: 'd13',
@@ -248,7 +287,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.8,
     joinedDate: '2022-08-08',
-    totalTrips: 750
+    totalTrips: 750,
+    lastActivity: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(), // 10 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2027-08-08'
   },
   {
     id: 'd14',
@@ -258,7 +300,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'on_leave',
     rating: 4.4,
     joinedDate: '2023-01-15',
-    totalTrips: 300
+    totalTrips: 300,
+    lastActivity: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2028-01-15'
   },
   {
     id: 'd15',
@@ -268,7 +313,10 @@ export const MOCK_DRIVERS: Driver[] = [
     status: 'active',
     rating: 4.6,
     joinedDate: '2021-05-20',
-    totalTrips: 1200
+    totalTrips: 1200,
+    lastActivity: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7 hours ago
+    complianceStatus: 'compliant',
+    licenseExpiryDate: '2026-05-20'
   }
 ];
 
