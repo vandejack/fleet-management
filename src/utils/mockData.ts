@@ -42,6 +42,8 @@ export interface Vehicle {
   odometer?: number;
   engineHours?: number;
   temperature?: number;
+  gpsVendor?: { id: string; name: string };
+  gpsModel?: { id: string; name: string };
   behaviorEvents?: BehaviorEvent[];
 }
 

@@ -155,12 +155,12 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
               <div className="space-y-1">
                 <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
                   <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-3">
                       <Gauge size={16} className="text-cyan-600 dark:text-cyan-400" /> Telemetry Details
                     </span>
                     <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
                   </summary>
-                  <div className="p-3 pt-0 border-t border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/10 grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-3 pt-3 border-t border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/10 grid grid-cols-2 gap-4 text-xs">
                     <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
                       <span className="text-slate-600 dark:text-slate-500">Odometer</span>
                       <span className="text-slate-900 dark:text-slate-300 font-mono">{vehicle?.odometer?.toFixed(0)} km</span>
@@ -182,7 +182,32 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
                 <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
                   <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-3">
+                      <Signal size={16} className="text-purple-600 dark:text-purple-400" /> GPS Hardware
+                    </span>
+                    <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
+                  </summary>
+                  <div className="p-3 pt-3 border-t border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/10 space-y-2 text-xs">
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Vendor</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-medium">{vehicle?.gpsVendor?.name || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-500">Model</span>
+                      <span className="text-slate-900 dark:text-slate-300 font-medium">{vehicle?.gpsModel?.name || 'N/A'}</span>
+                    </div>
+                    {vehicle?.imei && (
+                      <div className="p-2 rounded bg-white dark:bg-white/5 flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-500">IMEI</span>
+                        <span className="text-slate-900 dark:text-slate-300 font-mono tracking-tighter">{vehicle.imei}</span>
+                      </div>
+                    )}
+                  </div>
+                </details>
+
+                <details className="group bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300 flex items-center gap-3">
                       <EyeOff size={16} className="text-orange-600 dark:text-orange-400" /> Fatigue Events
                     </span>
                     <span className="transform group-open:rotate-180 transition-transform text-slate-500">▼</span>
@@ -370,7 +395,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Telemetry Section */}
           <div>
-            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white">
+            <h4 className="font-bold mb-3 flex items-center gap-3 dark:text-white">
               <Gauge size={18} />
               Telemetry Data
             </h4>
@@ -471,7 +496,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Fatigue & Behavior Monitor Section */}
           <div>
-            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white">
+            <h4 className="font-bold mb-3 flex items-center gap-3 dark:text-white">
               <EyeOff size={18} />
               Fatigue Monitor (Movon)
             </h4>
@@ -489,7 +514,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                       onClick={() => event.evidenceUrl && setSelectedEvent(event)}
                     >
                       <div className="flex justify-between items-start mb-1">
-                        <span className="flex items-center gap-2 font-bold text-xs dark:text-white">
+                        <span className="flex items-center gap-3 font-bold text-xs dark:text-white">
                           {getEventIcon(event.type)}
                           {getEventLabel(event.type)}
                           {event.evidenceUrl && (
@@ -526,7 +551,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Driver Info */}
           <div>
-            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white" >
+            <h4 className="font-bold mb-3 flex items-center gap-3 dark:text-white" >
               <User size={18} />
               Driver Information
             </h4>
@@ -540,7 +565,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                   <p className="text-sm text-gray-500 dark:text-gray-400" > Primary Driver</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400" >
+              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400" >
                 <Phone size={16} />
                 <span>{vehicle.driver?.phone}</span>
               </div>
@@ -549,7 +574,7 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
 
           {/* Vehicle Specs */}
           <div>
-            <h4 className="font-bold mb-3 flex items-center gap-2 dark:text-white" >
+            <h4 className="font-bold mb-3 flex items-center gap-3 dark:text-white" >
               <Truck size={18} />
               Specifications
             </h4>
@@ -562,8 +587,16 @@ export const VehicleDetailPanel = ({ vehicle, onClose }: VehicleDetailPanelProps
                 <span className="text-gray-500 dark:text-gray-400 text-sm" > Year</span>
                 <span className="font-medium dark:text-white" > {vehicle.year}</span>
               </div>
+              <div className="flex justify-between items-center" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm" > GPS Vendor</span>
+                <span className="font-medium dark:text-white" > {vehicle.gpsVendor?.name || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm" > GPS Model</span>
+                <span className="font-medium dark:text-white" > {vehicle.gpsModel?.name || 'N/A'}</span>
+              </div>
               <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700" >
-                <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2" >
+                <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-3" >
                   <Wrench size={14} />
                   Last Maintenance
                 </span>

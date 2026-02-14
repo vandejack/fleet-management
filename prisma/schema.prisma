@@ -104,11 +104,35 @@ model Vehicle {
   behaviorEvents DriverBehaviorEvent[]
 
 
+  gpsVendorId     String?
+  gpsVendor       GPSVendor?        @relation(fields: [gpsVendorId], references: [id])
+  gpsModelId      String?
+  gpsModel        GPSModel?         @relation(fields: [gpsModelId], references: [id])
+  
   companyId       String?
   company         Company?          @relation(fields: [companyId], references: [id])
   
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+}
+
+model GPSVendor {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  models    GPSModel[]
+  vehicles  Vehicle[]
+  createdAt DateTime   @default(now())
+}
+
+model GPSModel {
+  id        String     @id @default(cuid())
+  name      String
+  vendorId  String
+  vendor    GPSVendor  @relation(fields: [vendorId], references: [id])
+  vehicles  Vehicle[]
+  createdAt DateTime   @default(now())
+  
+  @@unique([name, vendorId])
 }
 
 model FuelTransaction {

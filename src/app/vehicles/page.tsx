@@ -2,7 +2,8 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
 import { Search, Filter, Truck, Fuel, AlertTriangle, MoreVertical, Plus, User, Calendar, X, Edit2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getGPSVendors } from '@/lib/actions';
 
 export default function VehiclesPage() {
   const { vehicles, addVehicle, updateVehicle, maintenance } = useFleet();
@@ -19,7 +20,19 @@ export default function VehiclesPage() {
     model: '',
     year: new Date().getFullYear(),
     fuelType: 'diesel' as 'diesel' | 'petrol' | 'electric' | 'hybrid',
+    gpsVendorId: '',
+    gpsModelId: '',
   });
+
+  const [gpsVendors, setGpsVendors] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadVendors() {
+      const vendors = await getGPSVendors();
+      setGpsVendors(vendors);
+    }
+    loadVendors();
+  }, []);
 
   const openAddModal = () => {
     setEditingVehicle(null);
@@ -30,6 +43,8 @@ export default function VehiclesPage() {
       model: '',
       year: new Date().getFullYear(),
       fuelType: 'diesel',
+      gpsVendorId: '',
+      gpsModelId: '',
     });
     setIsModalOpen(true);
   };
@@ -43,6 +58,8 @@ export default function VehiclesPage() {
       model: vehicle.model || '',
       year: vehicle.year || new Date().getFullYear(),
       fuelType: vehicle.fuelType || 'diesel',
+      gpsVendorId: vehicle.gpsVendorId || '',
+      gpsModelId: vehicle.gpsModelId || '',
     });
     setIsModalOpen(true);
   };
@@ -88,7 +105,6 @@ export default function VehiclesPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Monitor and manage your fleet vehicles</p>
           </div>
 
-          {/* Desktop Add Button */}
           <button
             onClick={openAddModal}
             className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
@@ -229,9 +245,15 @@ export default function VehiclesPage() {
                       <p className="text-slate-500 dark:text-slate-400 mb-1">Year</p>
                       <p className="font-medium text-slate-800 dark:text-slate-200">{vehicle.year || 'N/A'}</p>
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <p className="text-slate-500 dark:text-slate-400 mb-1">Fuel Type</p>
                       <p className="font-medium text-slate-800 dark:text-slate-200 capitalize">{vehicle.fuelType || 'Diesel'}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 mb-1">GPS Hardware</p>
+                      <p className="font-medium text-slate-800 dark:text-slate-200">
+                        {vehicle.gpsVendor?.name || 'N/A'} {vehicle.gpsModel?.name || ''}
+                      </p>
                     </div>
                   </div>
 
@@ -308,6 +330,7 @@ export default function VehiclesPage() {
           </div>
         )}
       </div>
+
       {/* Add/Edit Vehicle Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -381,18 +404,54 @@ export default function VehiclesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fuel Type</label>
-                <select
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={vehicleFormData.fuelType}
-                  onChange={e => setVehicleFormData({ ...vehicleFormData, fuelType: e.target.value as any })}
-                >
-                  <option value="diesel">Diesel</option>
-                  <option value="petrol">Petrol</option>
-                  <option value="electric">Electric</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fuel Type</label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={vehicleFormData.fuelType}
+                    onChange={e => setVehicleFormData({ ...vehicleFormData, fuelType: e.target.value as any })}
+                  >
+                    <option value="diesel">Diesel</option>
+                    <option value="petrol">Petrol</option>
+                    <option value="electric">Electric</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  {/* Empty grid space or add more fields later */}
+                </div>
+              </div>
+
+              {/* GPS Vendor & Model */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GPS Vendor</label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={vehicleFormData.gpsVendorId}
+                    onChange={e => setVehicleFormData({ ...vehicleFormData, gpsVendorId: e.target.value, gpsModelId: '' })}
+                  >
+                    <option value="">Select Vendor</option>
+                    {gpsVendors.map(vendor => (
+                      <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GPS Model</label>
+                  <select
+                    disabled={!vehicleFormData.gpsVendorId}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    value={vehicleFormData.gpsModelId}
+                    onChange={e => setVehicleFormData({ ...vehicleFormData, gpsModelId: e.target.value })}
+                  >
+                    <option value="">Select Model</option>
+                    {gpsVendors.find(v => v.id === vehicleFormData.gpsVendorId)?.models?.map((model: any) => (
+                      <option key={model.id} value={model.id}>{model.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">

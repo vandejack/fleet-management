@@ -13,6 +13,31 @@ async function checkSuperadmin() {
     return session;
 }
 
+// GPS ACTIONS
+export async function getGPSVendors() {
+    try {
+        return await prisma.gPSVendor.findMany({
+            include: { models: true },
+            orderBy: { name: 'asc' }
+        });
+    } catch (error) {
+        console.error('Failed to fetch GPS vendors:', error);
+        return [];
+    }
+}
+
+export async function getGPSModels(vendorId: string) {
+    try {
+        return await prisma.gPSModel.findMany({
+            where: { vendorId },
+            orderBy: { name: 'asc' }
+        });
+    } catch (error) {
+        console.error('Failed to fetch GPS models:', error);
+        return [];
+    }
+}
+
 export async function getCompanies() {
     await checkSuperadmin();
     try {
@@ -205,6 +230,8 @@ export async function createVehicle(data: any) {
             data: {
                 ...data,
                 imei,
+                gpsVendorId: data.gpsVendorId || null,
+                gpsModelId: data.gpsModelId || null,
                 companyId: user.companyId || data.companyId,
                 status: 'idle',
                 speed: 0,
@@ -240,7 +267,11 @@ export async function updateVehicle(id: string, data: any) {
     try {
         const vehicle = await prisma.vehicle.update({
             where: { id },
-            data
+            data: {
+                ...data,
+                gpsVendorId: data.gpsVendorId || (data.gpsVendorId === '' ? null : undefined),
+                gpsModelId: data.gpsModelId || (data.gpsModelId === '' ? null : undefined),
+            }
         });
         revalidatePath('/vehicles');
         return { success: true, vehicle };
@@ -312,7 +343,9 @@ export async function getVehicles() {
         const vehicles = await prisma.vehicle.findMany({
             where, // Apply the filter!
             include: {
-                driver: true
+                driver: true,
+                gpsVendor: true,
+                gpsModel: true
             },
             orderBy: { updatedAt: 'desc' }
         });
