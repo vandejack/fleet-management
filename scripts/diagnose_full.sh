@@ -32,6 +32,25 @@ else
 fi
 echo ""
 
+
+# 3.5 Check Ngrok Tunnel Status
+echo "[3.5] CHECKING NGROK TUNNEL..."
+if command -v pm2 &> /dev/null; then
+    pm2 list | grep ngrok
+    echo "--- Ngrok Logs (Last 20 lines) ---"
+    pm2 logs ngrok-tunnel --lines 50 --nostream | tail -n 20
+else
+    echo "Skipping PM2 ngrok check."
+fi
+echo ""
+echo "--- Testing Local Ngrok API ---"
+if command -v curl &> /dev/null; then
+    curl -s http://localhost:4040/api/tunnels | grep -o "public_url\":\"[^\"]*\"" || echo "Could not access local ngrok API"
+else
+    echo "curl not found."
+fi
+echo ""
+
 # 4. Check Network Port 7001
 echo "[4] CHECKING PORT 7001 (TELTONIKA)..."
 if command -v netstat &> /dev/null; then
