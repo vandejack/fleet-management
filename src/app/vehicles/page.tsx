@@ -1,12 +1,12 @@
 'use client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
-import { Search, Filter, Truck, Fuel, AlertTriangle, MoreVertical, Plus, User, Calendar, X, Edit2 } from 'lucide-react';
+import { Search, Filter, Truck, Fuel, AlertTriangle, MoreVertical, Plus, User, Calendar, X, Edit2, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getGPSVendors } from '@/lib/actions';
 
 export default function VehiclesPage() {
-  const { vehicles, addVehicle, updateVehicle, maintenance } = useFleet();
+  const { vehicles, addVehicle, updateVehicle, deleteVehicle, maintenance } = useFleet();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -72,6 +72,12 @@ export default function VehiclesPage() {
       addVehicle(vehicleFormData);
     }
     setIsModalOpen(false);
+  };
+
+  const handleDeleteVehicle = async (vehicle: any) => {
+    if (confirm(`Are you sure you want to delete ${vehicle.name}? This will also delete all associated history and alerts.`)) {
+      await deleteVehicle(vehicle.id);
+    }
   };
 
   const filteredVehicles = vehicles.filter(vehicle => {
@@ -226,6 +232,13 @@ export default function VehiclesPage() {
                         title="Edit Vehicle"
                       >
                         <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteVehicle(vehicle)}
+                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+                        title="Delete Vehicle"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

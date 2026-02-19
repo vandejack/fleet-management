@@ -28,7 +28,7 @@ interface Settings {
 // Server Actions
 import {
   createDriver as createDriverAction, updateDriver as updateDriverAction, deleteDriver as deleteDriverAction,
-  createVehicle as createVehicleAction, updateVehicle as updateVehicleAction,
+  createVehicle as createVehicleAction, updateVehicle as updateVehicleAction, deleteVehicle as deleteVehicleAction,
   createMaintenance as createMaintenanceAction, updateMaintenance as updateMaintenanceAction,
   getVehicles as getVehiclesAction,
   assignDriver as assignDriverAction, unassignDriver as unassignDriverAction
@@ -71,8 +71,10 @@ interface FleetContextType {
   updateSettings: (newSettings: Settings) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'currentLocation' | 'speed' | 'status' | 'fuelLevel' | 'lastMaintenance'>) => void;
   updateVehicle: (id: string, data: Partial<Vehicle>) => void;
+  deleteVehicle: (id: string) => Promise<boolean>;
   addDriver: (driver: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => void;
   updateDriver: (id: string, data: Partial<Driver>) => void;
+  deleteDriver: (id: string) => Promise<boolean>;
   addMaintenance: (record: Omit<MaintenanceRecord, 'id'>) => void;
   updateMaintenance: (id: string, data: Partial<MaintenanceRecord>) => void;
   addFuelTransaction: (transaction: Omit<FuelTransaction, 'id'>) => void;
@@ -479,6 +481,18 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
     }
   };
 
+  const deleteVehicle = async (id: string) => {
+    const result = await deleteVehicleAction(id);
+    if (result.success) {
+      setVehicles(prev => prev.filter(v => v.id !== id));
+      if (selectedVehicle?.id === id) {
+        setSelectedVehicle(null);
+      }
+      return true;
+    }
+    return false;
+  };
+
   const addDriver = async (driverData: Omit<Driver, 'id' | 'joinedDate' | 'totalTrips' | 'rating'>) => {
     const result = await createDriverAction(driverData);
     if (result.success && result.driver) {
@@ -496,6 +510,17 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
   const updateDriver = async (id: string, data: Partial<Driver>) => {
     await updateDriverAction(id, data);
     setDrivers(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+  };
+
+  const deleteDriver = async (id: string) => {
+    const result = await deleteDriverAction(id);
+    if (result.success) {
+      setDrivers(prev => prev.filter(d => d.id !== id));
+      // Also update vehicles to remove assignment locally
+      setVehicles(prev => prev.map(v => v.driver?.id === id ? { ...v, driver: undefined } : v));
+      return true;
+    }
+    return false;
   };
 
   const addMaintenance = async (record: Omit<MaintenanceRecord, 'id'>) => {
@@ -590,8 +615,10 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
       updateSettings,
       addVehicle,
       updateVehicle,
+      deleteVehicle,
       addDriver,
       updateDriver,
+      deleteDriver,
       addMaintenance,
       updateMaintenance,
       addFuelTransaction,

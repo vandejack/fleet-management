@@ -3,12 +3,12 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useFleet } from '@/context/FleetContext';
 import { useState } from 'react';
-import { User, Phone, Star, Calendar, FileText, Search, Filter, Truck, X, Check, Edit2, Clock, TrendingUp, Shield, AlertCircle } from 'lucide-react';
+import { Search, Filter, User, Phone, Calendar, Mail, Star, MapPin, MoreVertical, Plus, X, Edit2, Trash2, FileText, Truck, Check, Clock, TrendingUp, Shield, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DriversPage() {
-  const { drivers, vehicles, assignDriver, unassignDriver, addDriver, updateDriver } = useFleet();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { drivers, vehicles, assignDriver, unassignDriver, addDriver, updateDriver, deleteDriver } = useFleet();
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'off_duty' | 'on_leave'>('all');
 
   // Assignment Modal State
@@ -63,9 +63,15 @@ export default function DriversPage() {
     setIsDriverModalOpen(false);
   };
 
+  const handleDeleteDriver = async (driver: any) => {
+    if (confirm(`Are you sure you want to delete ${driver.name}? This will unassign them from any vehicles.`)) {
+      await deleteDriver(driver.id);
+    }
+  };
+
   const filteredDrivers = drivers.filter(driver => {
-    const matchesSearch = driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      driver.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -203,8 +209,8 @@ export default function DriversPage() {
             <input
               type="text"
               placeholder="Search drivers by name or license..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all text-base"
             />
           </div>
@@ -387,6 +393,12 @@ export default function DriversPage() {
                       className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       <Edit2 size={13} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteDriver(driver)}
+                      className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 size={13} /> Delete
                     </button>
                     <Link href={`/drivers/${driver.id}`} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20">
                       View Profile

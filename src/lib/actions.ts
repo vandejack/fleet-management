@@ -205,14 +205,62 @@ export async function updateDriver(id: string, data: any) {
     }
 }
 
+
 export async function deleteDriver(id: string) {
     const session = await auth();
     try {
+        // 1. Unassign from all vehicles
+        await prisma.vehicle.updateMany({
+            where: { driverId: id },
+            data: { driverId: null }
+        });
+
+        // 2. Delete related behavior events
+        await prisma.driverBehaviorEvent.deleteMany({
+            where: { driverId: id }
+        });
+
+        // 3. Delete the driver
         await prisma.driver.delete({ where: { id } });
+
         revalidatePath('/drivers');
         return { success: true };
     } catch (error) {
+        console.error('Failed to delete driver:', error);
         return { success: false, error: 'Failed to delete driver' };
+    }
+}
+
+export async function deleteVehicle(id: string) {
+    const session = await auth();
+    // Add auth checks if needed
+
+    try {
+        // 1. Delete dependent data first (Manual Cascade)
+
+        // Location History
+        await prisma.locationHistory.deleteMany({ where: { vehicleId: id } });
+
+        // Alerts
+        await prisma.alert.deleteMany({ where: { vehicleId: id } });
+
+        // Fuel Transactions
+        await prisma.fuelTransaction.deleteMany({ where: { vehicleId: id } });
+
+        // Maintenance Records
+        await prisma.maintenanceRecord.deleteMany({ where: { vehicleId: id } });
+
+        // Driver Behavior Events (linked to vehicle)
+        await prisma.driverBehaviorEvent.deleteMany({ where: { vehicleId: id } });
+
+        // 2. Delete the vehicle
+        await prisma.vehicle.delete({ where: { id } });
+
+        revalidatePath('/vehicles');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete vehicle:', error);
+        return { success: false, error: 'Failed to delete vehicle' };
     }
 }
 
