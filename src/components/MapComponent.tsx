@@ -12,7 +12,9 @@ const getVehicleIcon = (status: string, driverName?: string) => {
     ? '#34C759' // Apple green (Moving)
     : status === 'idle'
       ? '#FF9500' // Apple orange (Idle)
-      : '#FF3B30'; // Apple red (Stopped)
+      : status === 'stopped'
+        ? '#FF3B30' // Apple red (Stopped)
+        : '#9CA3AF'; // Gray (Offline)
 
   return L.divIcon({
     className: 'custom-vehicle-icon',
@@ -118,7 +120,9 @@ const SmoothVehicleMarker = ({ vehicle, onSelect }: { vehicle: Vehicle, onSelect
         <div className="p-2 cursor-pointer min-w-[150px]" onClick={() => onSelect?.(vehicle)}>
           <h3 className="font-bold text-slate-900 dark:text-white">{vehicle.name}</h3>
           <p className="text-slate-600 dark:text-slate-300">Status: <span className={`font-semibold ${vehicle.status === 'moving' ? 'text-green-600 dark:text-green-400' :
-            vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+            vehicle.status === 'idle' ? 'text-yellow-600 dark:text-yellow-400' :
+              vehicle.status === 'stopped' ? 'text-red-600 dark:text-red-400' :
+                'text-gray-600 dark:text-gray-400'
             }`}>{vehicle.status.toUpperCase()}</span></p>
           <p className="text-slate-600 dark:text-slate-300">Speed: {Math.round(vehicle.speed)} km/h</p>
           <p className="text-slate-600 dark:text-slate-300">Fuel: {typeof vehicle.fuelLevel === 'number' ? vehicle.fuelLevel.toFixed(2) : vehicle.fuelLevel}%</p>

@@ -16,7 +16,8 @@
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed",
-    "tunnel": "ngrok start --config=./ngrok.yml fleet-tcp"
+    "tunnel": "ngrok start --config=./ngrok.yml fleet-tcp",
+    "generate:ios": "powershell ./scripts/generate-ios.ps1"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",

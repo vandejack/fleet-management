@@ -205,17 +205,22 @@ export const FleetProvider = ({ children, initialVehicles, initialDrivers, initi
           setLastSyncTime(new Date().toISOString());
           setVehicles(prev => {
             // Map server vehicles to UI format
-            return result.vehicles.map((v: any) => ({
-              ...v,
-              currentLocation: {
-                lat: v.lat,
-                lng: v.lng,
-                timestamp: v.lastLocationTime ? new Date(v.lastLocationTime).toISOString() : new Date().toISOString()
-              },
-              fuelLevel: v.fuelLevel || 0,
-              speed: v.speed || 0,
-              status: v.status || 'idle'
-            }));
+            return result.vehicles.map((v: any) => {
+              const lastLocationTime = v.lastLocationTime ? new Date(v.lastLocationTime) : new Date();
+              const isOffline = (Date.now() - lastLocationTime.getTime()) > 2 * 60 * 60 * 1000; // 2 hours
+
+              return {
+                ...v,
+                currentLocation: {
+                  lat: v.lat,
+                  lng: v.lng,
+                  timestamp: lastLocationTime.toISOString()
+                },
+                fuelLevel: v.fuelLevel || 0,
+                speed: v.speed || 0,
+                status: isOffline ? 'offline' : (v.status || 'idle')
+              };
+            });
           });
         }
       } catch (error) {

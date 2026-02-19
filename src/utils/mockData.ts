@@ -24,7 +24,7 @@ export interface Vehicle {
   name: string;
   plate: string;
   imei?: string;
-  status: 'moving' | 'idle' | 'stopped';
+  status: 'moving' | 'idle' | 'stopped' | 'offline';
   currentLocation: Coordinate;
   fuelLevel: number; // percentage
   speed: number; // km/h

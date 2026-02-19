@@ -12,7 +12,8 @@ export default function VehicleListPanel() {
             case 'moving': return 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]';
             case 'idle': return 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]';
             case 'stopped': return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]';
-            default: return 'bg-gray-500';
+            case 'offline': return 'bg-gray-500 shadow-[0_0_8px_rgba(107,114,128,0.5)]';
+            default: return 'bg-slate-500';
         }
     };
 
